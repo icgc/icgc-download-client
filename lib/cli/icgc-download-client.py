@@ -21,10 +21,10 @@ import logging
 import yaml
 import sys
 
-from clients.ega import ega_script
-from clients.gdc import gdc_script
-from clients.gnos import genetorrent
-from clients.icgc import icgc_script
+from clients.ega import ega_client
+from clients.gdc import gdc_client
+from clients.gnos import gt_client
+from clients.icgc import icgc_client
 
 
 def config_parse(filename):
@@ -95,7 +95,7 @@ if args.repo == 'ega':
                 if config['transport.parallel.ega'] is not '1':
                     logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                    "downloads.  This option is not recommended.")
-                code = ega_script.ega_call(args.file, config['username.ega'], config['password.ega'],
+                code = ega_client.ega_call(args.file, config['username.ega'], config['password.ega'],
                                            config['tool.ega'], config['transport.parallel.ega'], config['udt'],
                                            args.output)
                 if code != 0:
@@ -110,7 +110,7 @@ elif args.repo == 'collab' or args.repo == 'aws':
         logger.error("No credentials provided for the icgc repository")
         sys.exit(1)
     if args.manifest is not None:
-        code = icgc_script.icgc_manifest_call(args.manifest, config['access.icgc'], config['tool.icgc'],
+        code = icgc_client.icgc_manifest_call(args.manifest, config['access.icgc'], config['tool.icgc'],
                                               config['transport.file.from.icgc'], config['transport.parallel.icgc'],
                                               args.output, args.repo)
     if args.file is not None:  # This code exists to let users use both file id's and manifests in one command
@@ -118,7 +118,7 @@ elif args.repo == 'collab' or args.repo == 'aws':
             logger.error("The icgc repository does not support input of multiple file id values.")
             sys.exit(1)
         else:
-            code = icgc_script.icgc_call(args.file, config['access.icgc'], config['tool.icgc'],
+            code = icgc_client.icgc_call(args.file, config['access.icgc'], config['tool.icgc'],
                                          config['transport.file.from.icgc'], config['transport.parallel.icgc'],
                                          args.output, args.repo)
 
@@ -131,21 +131,21 @@ elif args.repo == 'cghub':
         logger.error("No credentials provided for the cghub repository.")
         sys.exit(1)
     if args.manifest is not None:
-        code = genetorrent.genetorrent_manifest_call(args.manifest, config['access.cghub'], config['tool.cghub'],
-                                                     config['transport.parallel.cghub'], args.output)
+        code = gt_client.genetorrent_manifest_call(args.manifest, config['access.cghub'], config['tool.cghub'],
+                                                   config['transport.parallel.cghub'], args.output)
     if args.file is not None:
-        code = genetorrent.genetorrent_call(args.file, config['access.cghub'], config['tool.cghub'],
-                                            config['transport.parallel.cghub'], args.output)
+        code = gt_client.genetorrent_call(args.file, config['access.cghub'], config['tool.cghub'],
+                                          config['transport.parallel.cghub'], args.output)
     if code != 0:
         logger.error(args.repo + " exited with a nonzero error code.")
         sys.exit(2)
 
 elif args.repo == 'gdc':
     if args.manifest is not None:
-        code = gdc_script.gdc_manifest_call(args.manifest, config['access.gdc'], config['tool.gdc'], args.output,
+        code = gdc_client.gdc_manifest_call(args.manifest, config['access.gdc'], config['tool.gdc'], args.output,
                                             config['udt'], config['transport.parallel.gdc'])
     if args.file is not None:
-        code = gdc_script.gdc_call(args.file, config['access.gdc'], config['tool.gdc'], args.output, config['udt'],
+        code = gdc_client.gdc_call(args.file, config['access.gdc'], config['tool.gdc'], args.output, config['udt'],
                                    config['transport.parallel.gdc'])
     if code != 0:
         logger.error(args.repo + " exited with a nonzero error code.")

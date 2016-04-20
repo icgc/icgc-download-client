@@ -41,6 +41,24 @@ replacing `{PATH}` with the path to your mounted directory.  This directory must
  * a `conf` directory containing the config.yaml file.
  * an empty logs directory`logs`.
 
-This will enable the invoaction of the python script with the commad `icgc-download-client`.  When running through the docker container there is no
+This will enable the invoaction of the python script with the command `icgc-download-client`.  When running through the docker container there is no
  need to use the `--output` or `--config` arguments.
+
+
+Sample commands (require valid icgc and ega credentials)
+
+icgc-download-client cghub -f a337c425-4314-40c6-a40a-a444781bd1b7
+
+icgc-download-client ega  -f EGAD00001001847
+
+icgc-download-client collab -f a5a6d87b-e599-528b-aea0-73f5084205d5
+
+icgc-download-client gdc -f f483ad78-b092-4d10-9afb-eccacec9d9dc
+
+icgc-download-client collab 9c18cbb9-aaa8-4157-b2dc-a857b1096a6a
+
+icgc-download-client gdc -f 2c759eb8-7ee0-43f5-a008-de4317ab8c70 a6b2f1ff-5c71-493c-b65d-e344ed29b7bb
+
+icgc-download-client cghub  -f a452b625-74f6-40b5-90f8-7fe6f32b89bd a105a6ec-7cc3-4c3b-a99f-af29de8a7caa
+
 
