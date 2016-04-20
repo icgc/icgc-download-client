@@ -102,4 +102,4 @@ RUN mkdir -p /icgc/gdc-data-transfer-tool && \
 
 WORKDIR /icgc
 
-
+ENTRYPOINT ["python", "/icgc/cli/icgc-download-client.py"]

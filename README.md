@@ -34,9 +34,13 @@ and the `--config`, the location of the configuration file.  **Absolute paths ar
 Start the dockerfile with the command:
 
 ```shell
-alias icgc-download-client="docker run -it --rm -v {PATH}/icgc-download-client/mnt:/icgc/mnt icgc python /icgc/cli/icgc-download-client.py"
+alias icgc-download-client="docker run -it --rm -v {PATH}/icgc-download-client/mnt:/icgc/mnt icgc"
 ```
-replacing `{PATH}` with the path to the repository.
+replacing `{PATH}` with the path to your mounted directory.  This directory must contain three subdirectories:
+ * an empty`downloads` directory.
+ * a `conf` directory containing the config.yaml file.
+ * an empty logs directory`logs`.
+
 This will enable the invoaction of the python script with the commad `icgc-download-client`.  When running through the docker container there is no
- need to use the `--output` or `--config` arguments
+ need to use the `--output` or `--config` arguments.
 

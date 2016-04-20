@@ -79,63 +79,74 @@ logger = logging.getLogger('__log__')
 
 
 if args.file is None and args.manifest is None:
-    logger.error("Please provide either a file id value or a manifest file to download")
+    logger.error("Please provide either a file id value or a manifest file to download.")
     sys.exit(1)
 
 if args.repo == 'ega':
     if config['username.ega'] is None or config['password.ega'] is None:
         if config['access.ega'] is None:
-            logger.error("No credentials provided for the ega repository")
+            logger.error("No credentials provided for the ega repository.")
             sys.exit(1)
     if args.file is not None:
             if len(args.file) > 1:
-                logger.error("The ega repository does not support input of multiple file id values")
+                logger.error("The ega repository does not support input of multiple file id values.")
                 sys.exit(1)
             else:
-                ega_script.ega_call(args.file, config['username.ega'], config['password.ega'], config['tool.ega'],
-                                    config['udt'], args.output)
+                if config['transport.parallel.ega'] is not '1':
+                    logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
+                                   "downloads.  This option is not recommended.")
+                code = ega_script.ega_call(args.file, config['username.ega'], config['password.ega'],
+                                           config['tool.ega'], config['transport.parallel.ega'], config['udt'],
+                                           args.output)
+                if code != 0:
+                    logger.error(args.repo + " exited with a nonzero error code.")
+                    sys.exit(2)
+                sys.exit(1)
     if args.manifest is not None:
         logger.warning("The ega repository does not support downloading from manifest files.  Use the -f tag instead")
         sys.exit(1)
-
 elif args.repo == 'collab' or args.repo == 'aws':
     if config['access.icgc'] is None:
         logger.error("No credentials provided for the icgc repository")
         sys.exit(1)
     if args.manifest is not None:
         code = icgc_script.icgc_manifest_call(args.manifest, config['access.icgc'], config['tool.icgc'],
-                                       config['transport.file.from.icgc'], args.output, args.repo)
+                                              config['transport.file.from.icgc'], config['transport.parallel.icgc'],
+                                              args.output, args.repo)
     if args.file is not None:  # This code exists to let users use both file id's and manifests in one command
         if len(args.file) > 1:
-            logger.error("The icgc repository does not support input of multiple file id values")
+            logger.error("The icgc repository does not support input of multiple file id values.")
             sys.exit(1)
         else:
             code = icgc_script.icgc_call(args.file, config['access.icgc'], config['tool.icgc'],
-                                  config['transport.file.from.icgc'], args.output, args.repo)
+                                         config['transport.file.from.icgc'], config['transport.parallel.icgc'],
+                                         args.output, args.repo)
 
     if code != 0:
-        logger.error(args.repo + " exited with a nonzero error code")
+        logger.error(args.repo + " exited with a nonzero error code.")
         sys.exit(2)
 
 elif args.repo == 'cghub':
     if config['access.cghub'] is None:
-        logger.error("No credentials provided for the cghub repository")
+        logger.error("No credentials provided for the cghub repository.")
         sys.exit(1)
     if args.manifest is not None:
         code = genetorrent.genetorrent_manifest_call(args.manifest, config['access.cghub'], config['tool.cghub'],
-                                              args.output)
+                                                     config['transport.parallel.cghub'], args.output)
     if args.file is not None:
-        code = genetorrent.genetorrent_call(args.file, config['access.cghub'], config['tool.cghub'], args.output)
+        code = genetorrent.genetorrent_call(args.file, config['access.cghub'], config['tool.cghub'],
+                                            config['transport.parallel.cghub'], args.output)
     if code != 0:
-        logger.error(args.repo + " exited with a nonzero error code")
+        logger.error(args.repo + " exited with a nonzero error code.")
         sys.exit(2)
 
 elif args.repo == 'gdc':
     if args.manifest is not None:
         code = gdc_script.gdc_manifest_call(args.manifest, config['access.gdc'], config['tool.gdc'], args.output,
-                                     config['udt'])
+                                            config['udt'], config['transport.parallel.gdc'])
     if args.file is not None:
-        code = gdc_script.gdc_call(args.file, config['access.gdc'], config['tool.gdc'], args.output, config['udt'])
+        code = gdc_script.gdc_call(args.file, config['access.gdc'], config['tool.gdc'], args.output, config['udt'],
+                                   config['transport.parallel.gdc'])
     if code != 0:
-        logger.error(args.repo + " exited with a nonzero error code")
+        logger.error(args.repo + " exited with a nonzero error code.")
         sys.exit(2)
