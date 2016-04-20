@@ -3,7 +3,7 @@ Universal download client for ICGC data residing in various environments.
 
 ## Installing the Python Script
 
-The python script can be installed by simply navigating to the icgc-download-client directory and running the command:
+The python script can be installed by simply navigating to the `icgc-download-client` directory and running the command:
 
 ```shell
 python setup.py install
@@ -28,22 +28,27 @@ gdc or cghub repositories.  **The EGA and ICGC repositories do not support this 
 If not running the tool in a docker container, a user must also specify the `--output` where files are to be saved
 and the `--config`, the location of the configuration file.  **Absolute paths are required for both arguments.**
 
-## Using the Dockerfile
+## Using the Docker Container
 
-
-Start the dockerfile with the command:
+To save some typing, you can add a convenience bash alias to make working with the container easier:
 
 ```shell
 alias icgc-download-client="docker run -it --rm -v {PATH}/icgc-download-client/mnt:/icgc/mnt icgc"
 ```
+
 replacing `{PATH}` with the path to your mounted directory.  This directory must contain three subdirectories:
  * an empty`downloads` directory.
  * a `conf` directory containing the config.yaml file.
  * an empty logs directory`logs`.
 
-This will enable the invoaction of the python script with the command `icgc-download-client`.  When running through the docker container there is no
+This will enable the invocation of the python script with the command `icgc-download-client`.  When running through the docker container there is no
  need to use the `--output` or `--config` arguments.
 
+Then execute the command as normal:
+
+```shell
+icgc-download-client collab -f  FI378424
+```
 
 Sample commands (require valid icgc and ega credentials)
 
@@ -60,5 +65,9 @@ icgc-download-client collab 9c18cbb9-aaa8-4157-b2dc-a857b1096a6a
 icgc-download-client gdc -f 2c759eb8-7ee0-43f5-a008-de4317ab8c70 a6b2f1ff-5c71-493c-b65d-e344ed29b7bb
 
 icgc-download-client cghub  -f a452b625-74f6-40b5-90f8-7fe6f32b89bd a105a6ec-7cc3-4c3b-a99f-af29de8a7caa
+
+
+
+
 
 
