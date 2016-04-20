@@ -76,7 +76,7 @@ args = parser.parse_args()
 config = config_parse(args.config)
 logger_setup(config['logfile'])
 logger = logging.getLogger('__log__')
-
+code = None
 
 if args.file is None and args.manifest is None:
     logger.error("Please provide either a file id value or a manifest file to download.")

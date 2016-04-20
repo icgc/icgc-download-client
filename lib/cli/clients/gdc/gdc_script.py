@@ -32,7 +32,7 @@ def gdc_call(uuid, token, tool_path, output, udt, processes):
     return code
 
 
-def gdc_manifest_call(manifest, token, tool_path, output, udt):
+def gdc_manifest_call(manifest, token, tool_path, output, udt, processes):
 
     call_args = [tool_path, 'download', '-m', manifest,  '--dir', output, '-n', processes]
     if token is not None:  # Enables download of unsecured gdc data

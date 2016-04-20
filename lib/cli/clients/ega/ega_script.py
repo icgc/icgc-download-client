@@ -29,7 +29,7 @@ def ega_call(object_id, username, password, tool_path, parallel, udt, download_d
     object_id = ''.join(object_id)  # object id is  a single element list to support multiple id's on other clients
     label = object_id + '_request'
     key = ''.join(SystemRandom().choice(ascii_uppercase + digits) for _ in range(4))  # Make randomized decryption key
-    args = ['java', '-jar', tool_path, '-p', username, password]
+    args = ['java', '-jar', tool_path, '-p', username, password, '-nt', parallel]
     # Parameters needed for all ega client commands
 
     request_call_args = args
@@ -51,7 +51,7 @@ def ega_call(object_id, username, password, tool_path, parallel, udt, download_d
     decrypt_call_args = args
     decrypt_call_args.append('-dc')
     for file in os.listdir(download_dir):  # File names cannot be dynamically predicted from dataset names
-        if fnmatch.fnmatch(file, '*.cip'):  # Tool attempts to decrypt all encrypted files in downloads.
+        if fnmatch.fnmatch(file, '*.cip'):  # Tool attempts to decrypt all encrypted files in download directory.
             decrypt_call_args.append(download_dir + '/' + file)
 
     decrypt_call_args.extend(['-dck', key])
