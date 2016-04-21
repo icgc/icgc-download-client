@@ -32,12 +32,13 @@ def icgc_call(object_id, token, tool_path, file_from, parallel, output, repo):
     return code
 
 
-def icgc_manifest_call(manifest, token, tool_path, file_from, output, repo):
+def icgc_manifest_call(manifest, token, tool_path, file_from, parallel, output, repo):
 
     os.environ['ACCESSTOKEN'] = token
-
+    os.environ['TRANSPORT_PARALLEL'] = parallel
     if file_from is not None:
         os.environ['TRANSPORT_FILEFROM'] = file_from
     call_args = [tool_path, '--profile', repo, 'download', '--manifest', manifest,  '--output-dir', output]
     code = run_command(call_args)
     return code
+

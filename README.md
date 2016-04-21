@@ -30,10 +30,14 @@ and the `--config`, the location of the configuration file.  **Absolute paths ar
 
 ## Using the Docker Container
 
+First, pull the docker image using the command
+
+`docker pull icgc/icgc-download-client`
+
 To save some typing, you can add a convenience bash alias to make working with the container easier:
 
 ```shell
-alias icgc-download-client="docker run -it --rm -v {PATH}/icgc-download-client/mnt:/icgc/mnt icgc"
+alias icgc-download-client="docker run -it --rm -v {PATH}/icgc-download-client/mnt:/icgc/mnt icgc-download-client"
 ```
 
 replacing `{PATH}` with the path to your mounted directory.  This directory must contain three subdirectories:

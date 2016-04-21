@@ -16,9 +16,19 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from distutils.core import setup
-
+from setuptools import setup, find_packages
+import os
 
 setup(name='icgc-download-client',
-      verison='0.1',
-      packages=['lib'])
+      verison='0.2',
+      description='A python wrapper for icgc download clients',
+      url="https://github.com/icgc/icgc-download-client",
+      packages=find_packages(exclude=['utils']),
+      install_requieres=['argparse', 'PyYaml', 'logging'],
+
+      entry_points={
+          'console_scripts': [
+              'icgc_download_client=icgc_download_client:main'
+          ]
+      }
+)
