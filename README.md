@@ -54,6 +54,11 @@ Then execute the command as normal:
 icgc-download-client collab -f  FI378424
 ```
 
+#### Manifest files in the docker container
+
+Because manifest files need to be accessible by the clients to be parsed, they should be saved in the directory being mounted.
+Once you have saved them in your mounted directory, you will need to provided the path to the manifest file starting from the `/icgc/mnt` directory, so it can be found in the docker client filesystem
+
 Sample commands (require valid icgc and ega credentials)
 
 icgc-download-client cghub -f a337c425-4314-40c6-a40a-a444781bd1b7

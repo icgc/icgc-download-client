@@ -32,12 +32,12 @@ def config_parse(filename):
     try:
         config_text = open(filename, 'r')
     except IOError:
-        print "Config file " + filename + " not found: Aborting"
+        print("Config file " + filename + " not found: Aborting")
         sys.exit(1)
     try:
         config_temp = yaml.load(config_text)
     except yaml.YAMLError:
-        print "Could not read config file" + filename + ": Aborting"
+        print("Could not read config file" + filename + ": Aborting")
         sys.exit(1)
     return config_temp
 
@@ -45,7 +45,7 @@ def config_parse(filename):
 def logger_setup(logfile):
 
     if logfile is None:
-        print "Logging file not specified: Aborting"
+        print("Logging file not specified: Aborting")
         sys.exit(1)
     logger = logging.getLogger('__log__')
     logger.setLevel(logging.DEBUG)
@@ -82,7 +82,7 @@ def call_client(args):
                 logger.error("The ega repository does not support input of multiple file id values.")
                 sys.exit(1)
             else:
-                if config['transport.parallel.ega'] is not '1':
+                if config['transport.parallel.ega'] != '1':
                     logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                    "downloads.  This option is not recommended.")
                 code = ega_client.ega_call(args.file, config['username.ega'], config['password.ega'],
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", nargs='?', default="/icgc/mnt/conf/config.yaml",
-                    help="File used to set download preferences and authentication criteria")
+                        help="File used to set download preferences and authentication criteria")
     parser.add_argument('repo', choices=repos, help='Specify which repository to download from, all lowercase letters')
     parser.add_argument('-f', '--file', nargs='*', help='Lowercase identifier of file or path to manifest file')
     parser.add_argument('-m', '--manifest', help='Flag used when the downloading from a manifest file')
