@@ -66,21 +66,24 @@ def call_client(args):
     config = config_parse(args.config)
     logger_setup(config['logfile'])
     logger = logging.getLogger('__log__')
-    code = None
+    code = 0
 
     if args.file is None and args.manifest is None:
         logger.error("Please provide either a file id value or a manifest file to download.")
-        sys.exit(1)
+        code = 1
+        return code
 
     if args.repo == 'ega':
         if config['username.ega'] is None or config['password.ega'] is None:
             if config['access.ega'] is None:
                 logger.error("No credentials provided for the ega repository.")
-                sys.exit(1)
+                code = 1
+                return code
         if args.file is not None:
             if len(args.file) > 1:
                 logger.error("The ega repository does not support input of multiple file id values.")
-                sys.exit(1)
+                code = 1
+                return code
             else:
                 if config['transport.parallel.ega'] != '1':
                     logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
@@ -90,15 +93,17 @@ def call_client(args):
                                            args.output)
                 if code != 0:
                     logger.error(args.repo + " exited with a nonzero error code.")
-                    sys.exit(2)
-                sys.exit(1)
+
         if args.manifest is not None:
             logger.warning("The ega repository doesn't support downloading from manifest files. Use the -f tag instead")
-            sys.exit(1)
+            code = 1
+            return code
+
     elif args.repo == 'collab' or args.repo == 'aws':
         if config['access.icgc'] is None:
             logger.error("No credentials provided for the icgc repository")
-            sys.exit(1)
+            code = 1
+            return code
         if args.manifest is not None:
             code = icgc_client.icgc_manifest_call(args.manifest, config['access.icgc'], config['tool.icgc'],
                                                   config['transport.file.from.icgc'], config['transport.parallel.icgc'],
@@ -106,19 +111,20 @@ def call_client(args):
         if args.file is not None:  # This code exists to let users use both file id's and manifests in one command
             if len(args.file) > 1:
                 logger.error("The icgc repository does not support input of multiple file id values.")
-                sys.exit(1)
+                code = 1
+                return code
             else:
                 code = icgc_client.icgc_call(args.file, config['access.icgc'], config['tool.icgc'],
                                              config['transport.file.from.icgc'], config['transport.parallel.icgc'],
                                              args.output, args.repo)
         if code != 0:
             logger.error(args.repo + " exited with a nonzero error code.")
-            sys.exit(2)
 
     elif args.repo == 'cghub':
         if config['access.cghub'] is None:
             logger.error("No credentials provided for the cghub repository.")
-            sys.exit(1)
+            code = 1
+            return code
         if args.manifest is not None:
             code = gt_client.genetorrent_manifest_call(args.manifest, config['access.cghub'], config['tool.cghub'],
                                                    config['transport.parallel.cghub'], args.output)
@@ -127,7 +133,6 @@ def call_client(args):
                                           config['transport.parallel.cghub'], args.output)
         if code != 0:
             logger.error(args.repo + " exited with a nonzero error code.")
-            sys.exit(2)
 
     elif args.repo == 'gdc':
         if args.manifest is not None:
@@ -138,12 +143,11 @@ def call_client(args):
                                        config['transport.parallel.gdc'])
         if code != 0:
             logger.error(args.repo + " exited with a nonzero error code.")
-            sys.exit(2)
-    sys.exit(1)
+
+    return code
 
 if __name__ == "__main__":
     repos = ['ega', 'collab', 'cghub', 'aws', 'gdc']
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", nargs='?', default="/icgc/mnt/conf/config.yaml",
                         help="File used to set download preferences and authentication criteria")
@@ -152,4 +156,5 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--manifest', help='Flag used when the downloading from a manifest file')
     parser.add_argument('--output', nargs='?', default='/icgc/mnt/downloads', help='Directory to save downloaded files')
     parsed_args = parser.parse_args()
-    call_client(parsed_args)
+    rc = call_client(parsed_args)
+    sys.exit(rc)

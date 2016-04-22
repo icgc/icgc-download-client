@@ -5,17 +5,19 @@ from argparse import Namespace
 import os
 
 
-class TestCGHubMethods(unittest.TestCase):
+class TestIcgcMethods():
 
-    def test_icgc(self):
-        args = Namespace(config=conf_dir, file=['a5a6d87b-e599-528b-aea0-73f5084205d5'], manifest=None,output=data_dir,
+    def test_icgc(self, config, data_dir):
+        args = Namespace(config=config, file=['a5a6d87b-e599-528b-aea0-73f5084205d5'], manifest=None,output=data_dir,
                          repo='collab')
         icgc_download_client.call_client(args)
         file_info = os.stat(data_dir + 'a337c425-4314-40c6-a40a-a444781bd1b7/G28034.MDA-MB-361.1.bam')
-        self.assertAlmostEqual(file_info.st_size, 5159984257, places=4)
 
-    def test_icgc_manifest(self):
-        args = Namespace(config=conf_dir, file=None, manifest=manifest_dir + 'manifest.collaboratory.1461082640538.txt',
+        assert (file_info.st_size, 5159984257)
+
+    def test_icgc_manifest(self, config, data_dir):
+        manifest_dir = '/Users/GavinWilson/git/icgc-download-client/lib/utils'
+        args = Namespace(config=config, file=None, manifest=manifest_dir + 'manifest.collaboratory.1461082640538.txt',
                          output='/Users/GavinWilson/git/icgc-download-client/mnt/downloads', repo='collab')
         icgc_download_client.call_client(args)
         assert (os.path.isfile(data_dir + 'f37971bd-ec65-4840-8d4f-678692cee695.embl-delly_1-3-0-preFilter.20151106.' +
@@ -28,9 +30,3 @@ class TestCGHubMethods(unittest.TestCase):
                                '.germline.sv.vcf.gz/4862d12a-7c48-5adf-939b-be93303d9847') and
                 os.path.isfile(data_dir + '6d3551d6-b5f4-4fd1-b8d7-8e5931096c19.broad-snowman.20151023.germline' +
                                '.sv.vcf.gz/965865a6-0b0c-5f83-b2f8-4b16e382b643'))
-
-if __name__ == '__main__':
-    data_dir = '/Users/GavinWilson/git/icgc-download-client/mnt/downloads/'
-    conf_dir = '/Users/GavinWilson/git/icgc-download-client/config_dev.yaml'
-    manifest_dir = '/Users/GavinWilson/git/icgc-download-client/lib/utils'
-    unittest.main()
