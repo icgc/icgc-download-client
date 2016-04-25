@@ -161,7 +161,7 @@ def call_client(args):
 
     return code
 
-if __name__ == "__main__":
+def main():
     repos = ['ega', 'collab', 'cghub', 'aws', 'gdc']
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", nargs='?', default="/icgc/conf/config.yaml",
@@ -173,3 +173,6 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
     rc = call_client(parsed_args)
     sys.exit(rc)
+
+if __name__ == "__main__":
+    main()

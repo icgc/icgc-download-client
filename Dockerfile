@@ -1,9 +1,8 @@
-#    ______________________   ____                      __                __   _________            __ 
-#   /  _/ ____/ ____/ ____/  / __ \____ _      ______  / /___  ____ _____/ /  / ____/ (_)__  ____  / /_
-#   / // /   / / __/ /      / / / / __ \ | /| / / __ \/ / __ \/ __ `/ __  /  / /   / / / _ \/ __ \/ __/
-# _/ // /___/ /_/ / /___   / /_/ / /_/ / |/ |/ / / / / / /_/ / /_/ / /_/ /  / /___/ / /  __/ / / / /_  
-#/___/\____/\____/\____/  /_____/\____/|__/|__/_/ /_/_/\____/\__,_/\__,_/   \____/_/_/\___/_/ /_/\__/ 
-                                   
+#    ______________________   ______     __
+#   /  _/ ____/ ____/ ____/  / ____/__  / /_
+#   / // /   / / __/ /      / / __/ _ \/ __/
+# _/ // /___/ /_/ / /___   / /_/ /  __/ /_
+#/___/\____/\____/\____/   \____/\___/\__/
 # Banner @ http://goo.gl/VCY0tD
 
 FROM       ubuntu:14.04
@@ -54,7 +53,8 @@ COPY . /icgc/icgcget/
 COPY /conf/ /icgc/conf
 
 RUN cd /icgc/icgcget && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    python setup.py install
 
 ENV PATH=$PATH:/icgc/icgcget
 
@@ -104,4 +104,4 @@ RUN mkdir -p /icgc/gdc-data-transfer-tool && \
 
 WORKDIR /icgc
 
-ENTRYPOINT ["python", "/icgc/icgcget/build/lib/icgcget/cli.py"]
+ENTRYPOINT ["icgc-get"]

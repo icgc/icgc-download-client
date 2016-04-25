@@ -24,11 +24,11 @@ setup(name='icgc-download-client',
       description='A python wrapper for icgc download clients',
       url="https://github.com/icgc/icgc-download-client",
       packages=find_packages(exclude=['utils']),
-      install_requieres=['argparse', 'PyYaml', 'logging'],
+      install_requires=['argparse', 'PyYaml', 'logging'],
 
       entry_points={
           'console_scripts': [
-              'icgc-get=cli:main'
+              'icgc-get=icgcget.cli:main'
           ]
       }
-     )
+      )
