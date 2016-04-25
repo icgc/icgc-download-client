@@ -1,7 +1,9 @@
 from argparse import Namespace
+
 from lib.cli import icgc_download_client
+
+from icgcget import cli
 from conftest import file_test, get_info
-from lib.cli import icgc_download_client
 
 
 class TestEGAMethods():

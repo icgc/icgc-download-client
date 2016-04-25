@@ -28,7 +28,7 @@ setup(name='icgc-download-client',
 
       entry_points={
           'console_scripts': [
-              'icgc_download_client=icgc_download_client:main'
+              'icgc-get=cli:main'
           ]
       }
-)
+     )

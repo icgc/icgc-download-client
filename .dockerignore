@@ -1,7 +1,7 @@
 mnt/downloads/
 mnt/logs/
 passfile.txt
-test
+tests
 .idea/
 .git
 .DS_store

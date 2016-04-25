@@ -12,12 +12,13 @@ def config():
 @pytest.fixture(scope="session")
 def data_dir():
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    dir = path + '/mnt/downloads/'
-    return dir
+    directory = path + '/mnt/downloads/'
+    return directory
+
 
 @pytest.fixture(scope="session")
 def manifest_dir():
-    manifest_directory = os.path.abspath(os.path.dirname(__file__))
+    manifest_directory = os.path.abspath(os.path.dirname(__file__)) + '/Data'
     return manifest_directory
 
 

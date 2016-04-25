@@ -47,17 +47,16 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 # Install python 2.7 and dependancies for Genetorrent.
 #
 
-RUN apt-get install -y python && \
-    wget -qO- https://pypi.python.org/packages/source/P/PyYAML/PyYAML-3.11.tar.gz#md5=f50e08ef0fe55178479d3a618efe21db | \
-    tar xvz --strip-components 1 && \
-    python setup.py install && \
-    mkdir -p /icgc/cli/clients
+RUN apt-get install -y python-pip && \
+    pip install -U pip setuptools
 
-COPY /lib/cli/ /icgc/cli/
+COPY . /icgc/icgcget/
+COPY /conf/ /icgc/conf
 
-RUN cd /icgc
+RUN cd /icgc/icgcget && \
+    pip install -r requirements.txt
 
-ENV PATH=$PATH:/icgc/cli
+ENV PATH=$PATH:/icgc/icgcget
 
 #
 # Download and install latest EGA download client version
@@ -96,7 +95,8 @@ RUN mkdir -p /icgc/gdc-data-transfer-tool && \
     cd /icgc/gdc-data-transfer-tool && \
     wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-clientv07ubuntu1404x64_1.zip -O temp.zip ; \
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
-    rm temp.zip
+    rm temp.zip && \
+    cd /icgc
 
 #
 # Set working directory for convenience with interactive usage
@@ -104,4 +104,4 @@ RUN mkdir -p /icgc/gdc-data-transfer-tool && \
 
 WORKDIR /icgc
 
-ENTRYPOINT ["python", "/icgc/cli/icgc_download_client.py"]
+ENTRYPOINT ["python", "/icgc/icgcget/build/lib/icgcget/cli.py"]
