@@ -56,8 +56,6 @@ RUN cd /icgc/icgcget && \
     pip install -r requirements.txt && \
     python setup.py install
 
-ENV PATH=$PATH:/icgc/icgcget
-
 #
 # Download and install latest EGA download client version
 #
