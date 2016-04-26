@@ -20,7 +20,7 @@ Valid repositories are:
 * `gdc` _(Genomic data commons)_
 * `cghub` _(Cancer genomic hub)_
 
-Second you must specify either a file id using the tag `-f` or `--file`, a manifest file using the tags `-m` or `--manifest`
+Second you must specify an object identifier or path to manifest file. If this object is a manifest file append the tags `-m` or `--manifest`
 or both.  This will specify the file or files to be downloaded.  **The EGA repository does not currently support
 downloads using a manifest file.**  It is possible to specify multiple file ID's using the `-f` flag when downloading from the
 gdc or cghub repositories.  **The EGA and ICGC repositories do not support this functionality**
@@ -50,7 +50,7 @@ This will enable the invocation of the python script with the command `icgc-get`
 Then execute the command as normal:
 
 ```shell
-icgc-get collab -f  FI378424
+icgc-get collab FI378424
 ```
 
 #### Manifest files in the docker container
