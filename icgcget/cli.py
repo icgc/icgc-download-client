@@ -16,12 +16,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import logging
-import sys
-import os
-import yaml
 import errno
+import logging
+import os
+import sys
+
 import click
+import yaml
 
 from clients.ega import ega_client
 from clients.gdc import gdc_client
@@ -30,7 +31,6 @@ from clients.icgc import icgc_client
 
 
 def config_parse(filename):
-
     try:
         config_text = filename.read()
         filename.close()
@@ -56,7 +56,6 @@ def make_directory(path):
 
 
 def logger_setup(logfile):
-
     if logfile is None:
         print("Logging file not specified: Aborting")
         sys.exit(1)
@@ -104,7 +103,7 @@ def call_client(config, repo, fileid, manifest, output):
                 if config['ega.transport.parallel'] != '1':
                     logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                    "downloads.  This option is not recommended.")
-                code = ega_client.ega_call(fileid, config['ega.username'], config['ega.password'],config['ega.tool'],
+                code = ega_client.ega_call(fileid, config['ega.username'], config['ega.password'], config['ega.tool'],
                                            config['ega.transport.parallel'], config['udt'],
                                            output)
                 if code != 0:
@@ -175,4 +174,4 @@ def cli(config, repo, fileid, manifest, output):
 
 
 if __name__ == "__main__":
-    cli()
+    sys.exit(cli())

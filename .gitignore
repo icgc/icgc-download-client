@@ -1,11 +1,18 @@
-mnt/
-.idea/
+# Python
 *.egg-info/
 build/
 dist/
 *.pyc
+
+# IDE
 *.iml
+.idea/
+
+# Development
+mnt/
 config_dev.yaml
 passfile.txt
+
+# Mac
 *.DS_store
 

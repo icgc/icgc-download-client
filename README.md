@@ -53,18 +53,15 @@ Then execute the command as normal:
 icgc-get collab FI378424
 ```
 
-#### Manifest files in the docker container
+### Manifest files in the docker container
 
 Because manifest files need to be accessible by the clients to be parsed, they should be saved in the directory being mounted.
 Once you have saved them in your mounted directory, you will need to provided the path to the manifest file starting from the `/icgc/mnt` directory, so it can be found in the docker client filesystem
 
 
-#### Unit tests
+### Unit tests
 
 Unit tests have been provided in the tests directory of the repository.  They require a configuration file with valid
 EGA and cghub credentials to be saved in the root of the repository.  They also require the command
 `export PYTHONPATH ={PATH}/icgcget` to be entered prior to running unit tests.  To run unit tests, simply enter
 `py.test` in the test directory
-
-
-

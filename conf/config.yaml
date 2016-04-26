@@ -18,26 +18,37 @@
 # ICGC Download Client - Configuration
 #
 
-ega.username:
-ega.password:
-ega.access:
-ega.tool: /icgc/ega-download-demo/EgaDemoClient.jar
-ega.transport.parallel: '1'
+# Common
+logfile: /icgc/mnt/logs/logfile.txt # TODO: This should end in .log!
 
-icgc.access:
-icgc.tool: /icgc/icgc-storage-client/bin/icgc-storage-client
-icgc.transport.file.from: remote
-icgc.transport.parallel: '6'
+# IGCC Storage
+icgc:
+  access:
+  tool: /icgc/icgc-storage-client/bin/icgc-storage-client
+  transport.file.from: remote
+  transport.parallel: 6
 
-gdc.access:
-gdc.tool: /icgc/gdc-data-transfer-tool/gdc-client
-gdc.transport.parallel: '6'
+# GDC
+gdc:
+  access:
+  tool: /icgc/gdc-data-transfer-tool/gdc-client
+  transport.parallel: 6
 
-cghub.access: https://cghub.ucsc.edu/software/downloads/cghub_public.key
-cghub.tool: /icgc/genetorrent/bin/gtdownload
-cghub.transport.parallel: '8'
+# EGA
+ega:
+  username:
+  password:
+  access:
+  tool: /icgc/ega-download-demo/EgaDemoClient.jar
+  transport.parallel: 1
 
+# CGHub
+cghub:
+  access: https://cghub.ucsc.edu/software/downloads/cghub_public.key
+  tool: /icgc/genetorrent/bin/gtdownload
+  transport.parallel: 8
+
+# TODO: Move to the right section, with the right prefix!
 udt: false
-transport.parallel: '6'
-transport.memory: 1
-logfile: /icgc/mnt/logs/logfile.txt
+transport.parallel: 6 # TODO: Move up to icgc!
+transport.memory: 1   # TODO: Move up to icgc!
