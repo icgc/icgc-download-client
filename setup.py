@@ -19,7 +19,7 @@
 from setuptools import setup, find_packages
 
 
-setup(name='icgc-download-client',
+setup(name='icgc-get',
       verison='0.2',
       description='A python wrapper for icgc-get',
       url="https://github.com/icgc/icgc-get",
