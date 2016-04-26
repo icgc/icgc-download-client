@@ -43,7 +43,7 @@ RUN apt-get install -y \
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 #
-# Install python 2.7 and dependancies for Genetorrent.
+# Install python 2.7 and dependancies for Genetorrent and icgc-get.
 #
 
 RUN apt-get install -y python-pip && \

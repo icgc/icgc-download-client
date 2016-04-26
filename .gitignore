@@ -1,5 +1,5 @@
 .idea/
-icgc_download_client.egg-info
+*.egg-info/
 build/
 dist/
 *.pyc
