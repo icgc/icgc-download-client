@@ -16,17 +16,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-from argparse import Namespace
-
+from click.testing import CliRunner
 from conftest import file_test, get_info
 from icgcget import cli
 
 
 class TestIcgcMethods():
     def test_icgc(self, config, data_dir):
-        args = Namespace(config=config, file=['a5a6d87b-e599-528b-aea0-73f5084205d5'], manifest=None, output=data_dir,
-                         repo='collab')
-        cli.call_client(args)
+        runner = CliRunner()
+        rc = runner.invoke(cli, [config, 'collab', 'a5a6d87b-e599-528b-aea0-73f5084205d5', '--output', data_dir])
         file_info = get_info(data_dir, 'fc447d55-95d8-0b34-e040-11ac0d483afa.embl-delly_1-0-0-preFilter.20150618' +
                              '.germline.sv.vcf.gz/a5a6d87b-e599-528b-aea0-73f5084205d5')
         file2_info = get_info(data_dir, 'fc447d55-95d8-0b34-e040-11ac0d483afa.embl-delly_1-0-0-preFilter.20150618.' +
@@ -34,9 +32,9 @@ class TestIcgcMethods():
         assert (file_test(file_info, 202180) and file_test(file2_info, 21701))
 
     def test_icgc_manifest(self, config, data_dir, manifest_dir):
-        args = Namespace(config=config, file=None, manifest=manifest_dir + 'manifest.collaboratory.1461082640538.txt',
-                         output=data_dir, repo='collab')
-        cli.call_client(args)
+        runner = CliRunner()
+        rc = runner.invoke(cli, [config, 'collab', manifest_dir +
+                                 'manifest.collaboratory.1461082640538.txt', '-m', '--output', data_dir])
         file1_info = get_info(data_dir, 'f37971bd-ec65-4840-8d4f-678692cee695.embl-delly_1-3-0-preFilter.20151106.' +
                               'germline.sv.vcf.gz/ec37ddf9-9ea4-5b8b-ac38-c9e415b302c4')
         file2_info = get_info(data_dir, 'f37971bd-ec65-4840-8d4f-678692cee695.embl-delly_1-3-0-preFilter' +

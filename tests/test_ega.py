@@ -15,7 +15,7 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
+from click.testing import CliRunner
 from argparse import Namespace
 
 from conftest import file_test, get_info
@@ -24,14 +24,14 @@ from icgcget import cli
 
 class TestEGAMethods():
     def test_ega(self, config, data_dir):
-        args = Namespace(config=config, file=['EGAD00001001847'], manifest=None, output=data_dir, repo='ega')
-        cli.call_client(args)
+        runner = CliRunner()
+        rc = runner.invoke(cli, [config, 'ega', 'EGAD00001001847', '--output', data_dir])
         file1_info = get_info(data_dir, '_EGAR00001385154_4Cseq_single-end_HD-MB03_TGFBR1_sequence.fastq.gz')
         file2_info = get_info(data_dir, '_EGAR00001385153_4Cseq_single-end_HD-MB03_SMAD9_sequence.fastq.gz')
         assert (file_test(file1_info, 323699429), file_test(file2_info, 447127561))
 
     def test_ega_file(self, config, data_dir):
-        args = Namespace(config=config, file=['EGAF00000112559'], manifest=None, output=data_dir, repo='ega')
-        cli.call_client(args)
+        runner = CliRunner()
+        rc = runner.invoke(cli, [config, 'ega', 'EGAF00000112559', '--output', data_dir])
         file_info = get_info(data_dir, '_methylationCEL_CLL-174.CEL')
         assert (file_test(file_info, 5556766))
