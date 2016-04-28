@@ -19,19 +19,21 @@
 #
 
 # Common
-logfile: /icgc/mnt/logs/logfile.txt # TODO: This should end in .log!
+logfile: /Users/g2wilson/git/icgc-get/mnt/logfile.log # TODO: This should end in .log!
+udt: false
+transport.memory: 1
 
 # IGCC Storage
 icgc:
   access:
-  tool: /icgc/icgc-storage-client/bin/icgc-storage-client
+  path: /icgc/icgc-storage-client/bin/icgc-storage-client
   transport.file.from: remote
   transport.parallel: 6
 
 # GDC
 gdc:
   access:
-  tool: /icgc/gdc-data-transfer-tool/gdc-client
+  path: /icgc/gdc-data-transfer-tool/gdc-client
   transport.parallel: 6
 
 # EGA
@@ -39,16 +41,14 @@ ega:
   username:
   password:
   access:
-  tool: /icgc/ega-download-demo/EgaDemoClient.jar
+  path: /icgc/ega-download-demo/EgaDemoClient.jar
   transport.parallel: 1
 
 # CGHub
 cghub:
   access: https://cghub.ucsc.edu/software/downloads/cghub_public.key
-  tool: /icgc/genetorrent/bin/gtdownload
+  path: /icgc/genetorrent/bin/gtdownload
   transport.parallel: 8
 
-# TODO: Move to the right section, with the right prefix!
-udt: false
-transport.parallel: 6 # TODO: Move up to icgc!
-transport.memory: 1   # TODO: Move up to icgc!
+
+
