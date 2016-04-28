@@ -96,16 +96,13 @@ def logger_setup(logfile):
 
 
 @click.group()
-@click.option('--config', default=os.path.join(click.get_app_dir('icgc-get'), 'config.yaml'), envvar="ICGCGET.CONFIG",
+@click.option('--config', default=os.path.join(click.get_app_dir('icgc-get'), 'config.yaml'),
               type=click.Path(exists=True))
-@click.option('--logfile', default=None, envvar="ICGCGET.LOGFILE", type=click.Path(exists=True))
+@click.option('--logfile', default=None, type=click.Path(exists=True))
 @click.pass_context
 def cli(cli_context, config, logfile):
     config_file = config_parse(config)
-    if logfile is not None:
-        logger_setup(logfile)
-    else:
-        logger_setup(config_file['logfile'])
+    logger_setup(logfile) if logfile else logger_setup(config_file['logfile'])
     cli_context.default_map = config_file
     return config_file
 
@@ -113,30 +110,30 @@ def cli(cli_context, config, logfile):
 @click.command()
 @click.argument('repo', type=click.Choice(['collab', 'aws', 'ega', 'gdc', 'cghub']))
 @click.argument('fileid', nargs=-1)
-@click.option('--manifest', '-m', default="false")
-@click.option('--output', type=click.Path(exists=False), envvar="ICGCGET.OUTPUT")
-@click.option('--udt', envvar="ICGCGET.UDT")
-@click.option('--transport-memory', envvar="ICGCGET.TRANSPORT.MEMORY")
-@click.option('--ega-transport-parallel', envvar="ICGCGET.EGA.TRANSPORT.PARALLEL")
-@click.option('--ega-username', envvar="ICGCGET.EGA.USERNAME")
-@click.option('--ega-password', envvar="ICGCGET.EGA.PASSWORD")
-@click.option('--ega-access', envvar="ICGCGET.EGA.ACCESS")
-@click.option('--ega-path', envvar="ICGCGET.EGA.PATH")
-@click.option('--gdc-transport-parallel', envvar="ICGCGET.GDC.TRANSPORT.PARALLEL")
-@click.option('--gdc-access', envvar="ICGCGET.GDC.ACCESS")
-@click.option('--gdc-path', envvar="ICGCGET.GDC.PATH")
-@click.option('--cghub-transport-parallel', envvar="ICGCGET.CGHUB.TRANSPORT.PARALLEL")
-@click.option('--cghub-access', envvar="ICGCGET.CGHUB.ACCESS")
-@click.option('--cghub-path', envvar="ICGCGET.CGHUB.PATH")
-@click.option('--icgc-transport-parallel', envvar="ICGCGET.ICGC.TRANSPORT.PARALLEL")
-@click.option('--icgc-access', envvar="ICGCGET.ACCESS")
-@click.option('--icgc-path', envvar="ICGCGET.ICGC.PATH")
-@click.option('--icgc-transport-file-from', envvar="ICGCGET.ICGC.FILE.FROM")
-@click.pass_context
-def download(ctex, repo, fileid, manifest, output, udt, transport_memory, ega_transport_parallel, ega_access,
-             ega_username, ega_password, ega_path, gdc_transport_parallel, gdc_access, gdc_path,
-             cghub_transport_parallel, cghub_access, cghub_path, icgc_transport_parallel, icgc_access, icgc_path,
-             icgc_transport_file_from):
+@click.option('--manifest', '-m', default=False)
+@click.option('--output', type=click.Path(exists=False))
+@click.option('--cghub-access')
+@click.option('--cghub-path')
+@click.option('--cghub-transport-parallel')
+@click.option('--ega-access')
+@click.option('--ega-password')
+@click.option('--ega-path')
+@click.option('--ega-transport-parallel')
+@click.option('--ega-udt')
+@click.option('--ega-username')
+@click.option('--gdc-access')
+@click.option('--gdc-path')
+@click.option('--gdc-transport-parallel')
+@click.option('--gdc-udt')
+@click.option('--icgc-access')
+@click.option('--icgc-path')
+@click.option('--icgc-transport-file-from')
+@click.option('--icgc-transport-memory')
+@click.option('--icgc-transport-parallel')
+def download(repo, fileid, manifest, output, cghub_access, cghub_path, cghub_transport_parallel,   ega_access,
+             ega_password, ega_path, ega_transport_parallel, ega_username, ega_udt, gdc_access, gdc_path,
+             gdc_transport_parallel, gdc_udt,  icgc_access, icgc_path,icgc_transport_file_from, icgc_transport_memory,
+             icgc_transport_parallel):
 
         logger = logging.getLogger('__log__')
         code = 0
@@ -162,7 +159,7 @@ def download(ctex, repo, fileid, manifest, output, udt, transport_memory, ega_tr
                         logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                        "downloads.  This option is not recommended.")
                     code = ega_client.ega_call(fileid, ega_username, ega_password, ega_path, ega_transport_parallel,
-                                               udt, output)
+                                               ega_udt, output)
                     if code != 0:
                         logger.error("{} exited with a nonzero error code.".format(repo))
 
@@ -207,16 +204,16 @@ def download(ctex, repo, fileid, manifest, output, udt, transport_memory, ega_tr
 
         elif repo == 'gdc':
             if manifest is True:
-                code = gdc_client.gdc_manifest_call(fileid, gdc_access, gdc_path, output, udt, gdc_transport_parallel)
+                code = gdc_client.gdc_manifest_call(fileid, gdc_access, gdc_path, output, gdc_udt, gdc_transport_parallel)
             elif fileid is not None:
-                code = gdc_client.gdc_call(fileid, gdc_access, gdc_path, output, udt, gdc_transport_parallel)
+                code = gdc_client.gdc_call(fileid, gdc_access, gdc_path, output, gdc_udt, gdc_transport_parallel)
             if code != 0:
                 logger.error(repo + " exited with a nonzero error code.")
 
         return code
 
 
-
 if __name__ == "__main__":
     cli.add_command(download)
+    cli(auto_envvar_prefix='ICGCGET')
     sys.exit(cli())

@@ -20,7 +20,7 @@
 
 # Common
 logfile: /Users/g2wilson/git/icgc-get/mnt/logfile.log # TODO: This should end in .log!
-udt: false
+
 transport.memory: 1
 
 # IGCC Storage
@@ -35,6 +35,7 @@ gdc:
   access:
   path: /icgc/gdc-data-transfer-tool/gdc-client
   transport.parallel: 6
+  udt: false
 
 # EGA
 ega:
@@ -43,6 +44,7 @@ ega:
   access:
   path: /icgc/ega-download-demo/EgaDemoClient.jar
   transport.parallel: 1
+  udt: false
 
 # CGHub
 cghub:
