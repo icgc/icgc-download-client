@@ -19,8 +19,7 @@
 #
 
 # Common
-logfile: /Users/g2wilson/git/icgc-get/mnt/logfile.log # TODO: This should end in .log!
-
+logfile: /Users/g2wilson/git/icgc-get/mnt/logfile.log
 transport.memory: 1
 
 # IGCC Storage

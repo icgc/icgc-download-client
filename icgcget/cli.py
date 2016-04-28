@@ -215,5 +215,5 @@ def download(repo, fileid, manifest, output, cghub_access, cghub_path, cghub_tra
 
 if __name__ == "__main__":
     cli.add_command(download)
-    cli(auto_envvar_prefix='ICGCGET')
+    cli(auto_envvar_prefix='ICGCGET') 
     sys.exit(cli())

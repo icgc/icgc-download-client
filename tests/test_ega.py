@@ -16,7 +16,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 from click.testing import CliRunner
-
 from conftest import file_test, get_info
 from icgcget import cli
 

@@ -18,7 +18,7 @@
 
 import click
 from click.testing import CliRunner
-from argparse import Namespace
+
 
 from conftest import file_test, get_info
 from icgcget import cli
