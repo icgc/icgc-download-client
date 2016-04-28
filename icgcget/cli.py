@@ -35,6 +35,7 @@ def config_parse(filename):
     try:
         config_text = open(filename, 'r')
     except IOError:
+
         print("Config file {} not found".format(filename.name))
 
     try:
@@ -107,6 +108,7 @@ def cli(cli_context, config, logfile):
     return 0
 
 
+
 @click.command()
 @click.argument('repo', type=click.Choice(['collab', 'aws', 'ega', 'gdc', 'cghub']))
 @click.argument('fileid', nargs=-1)
@@ -132,7 +134,7 @@ def cli(cli_context, config, logfile):
 @click.option('--icgc-transport-parallel')
 def download(repo, fileid, manifest, output, cghub_access, cghub_path, cghub_transport_parallel,   ega_access,
              ega_password, ega_path, ega_transport_parallel, ega_username, ega_udt, gdc_access, gdc_path,
-             gdc_transport_parallel, gdc_udt, icgc_access, icgc_path,icgc_transport_file_from, icgc_transport_memory,
+             gdc_transport_parallel, gdc_udt, icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_memory,
              icgc_transport_parallel):
 
         logger = logging.getLogger('__log__')
@@ -204,6 +206,7 @@ def download(repo, fileid, manifest, output, cghub_access, cghub_path, cghub_tra
 
         elif repo == 'gdc':
             if manifest is True:
+
                 code = gdc_client.gdc_manifest_call(fileid, gdc_access, gdc_path, output, gdc_udt,
                                                     gdc_transport_parallel)
             elif fileid is not None:
@@ -213,10 +216,10 @@ def download(repo, fileid, manifest, output, cghub_access, cghub_path, cghub_tra
 
         return code
 
+
 def main():
     cli.add_command(download)
     sys.exit(cli(auto_envvar_prefix='ICGCGET'))
 
 if __name__ == "__main__":
     main()
-
