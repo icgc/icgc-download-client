@@ -1,5 +1,0 @@
-{
-  "tests/test_gdc.py::TestGDCMethods::()::test_gdc": true, 
-  "tests/test_gdc.py::TestGDCMethods::()::test_gdc_double": true, 
-  "tests/test_gdc.py::TestGDCMethods::()::test_gdc_manifest": true
-}

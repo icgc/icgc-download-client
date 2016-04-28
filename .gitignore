@@ -3,7 +3,7 @@
 build/
 dist/
 *.pyc
-
+.cache/
 # IDE
 *.iml
 .idea/
