@@ -22,6 +22,5 @@ PyYaml >= 3.11
 logging >= 0.4.9.6
 
 # Test dependencies
-argparse >= 1.4.0 # TODO: Remove
 pytest >= 2.9.1
 tox >= 2.3.1
