@@ -61,17 +61,17 @@ def config_parse(filename):
 def logger_setup(logfile):
     global logger
     logger = logging.getLogger('__log__')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
     if logfile is not None:
         fh = logging.FileHandler(logfile)
-        fh.setLevel(logging.DEBUG)
+        fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
     sh = logging.StreamHandler()
-    sh.setLevel(logging.INFO)
+    sh.setLevel(logging.WARNING)
     logger.addHandler(sh)
     return logger
 
@@ -84,8 +84,8 @@ def check_code(client, code):
 
 def check_access(access, name):
     if access is None:
-        logger.error("No credentials provided for the {} repository".format(name))
-        raise click.BadParameter("Please provide credentials for {}".format(name))
+        logger.error("No credentials provided for the {} repository.".format(name))
+        raise click.BadParameter("Please provide credentials for {}.".format(name))
 
 
 def repository_sort(repo, entity):
@@ -99,12 +99,13 @@ def repository_sort(repo, entity):
 
 def api_call(file_id, url):
     try:
-        entity = icgc_api.get_metadata_bulk(file_id, url)
+        entity_set = icgc_api.get_metadata_bulk(file_id, url)
     except RuntimeError:
         raise click.Abort
-    if not entity:
-        raise click.ClickException("File {} does not exist".format(file_id))
-    return entity
+    if not entity_set:
+        raise click.ClickException("File {} was not found in the Icgc database. ".format(file_id) +
+                                   "Please check if you have entered the correct File Id.")
+    return entity_set
 
 
 def size_check(size, override, output):
@@ -120,6 +121,7 @@ def size_check(size, override, output):
                                                                                                    file_size(free),
                                                                                                    output))
         raise click.Abort
+
 
 @click.group()
 @click.option('--config', default=DEFAULT_CONFIG_FILE)
@@ -187,9 +189,14 @@ def download(ctx, repos, fileids, manifest, output,
             manifest_json = icgc_api.read_manifest(fileids[0], api_url)
         except RuntimeError:
             raise click.Abort
+        if manifest_json["entries"]:
+            entries = manifest_json["entries"]
+        else:
+            raise click.ClickException("Supplied manifest does not contain any file information." +
+                                       "There may have been errors in generating the manifest")
         if not manifest_json["unique"] or len(manifest_json["entries"]) != 1:
             fi_ids = []
-            for repo_info in manifest_json["entries"]:
+            for repo_info in entries:
                 if repo_info["repo"] in REPOS:
                     for file_info in repo_info["files"]:
                         if file_info["id"] in fi_ids:
@@ -199,7 +206,7 @@ def download(ctx, repos, fileids, manifest, output,
                         else:
                             fi_ids.append(file_info["id"])
 
-        for repo_info in manifest_json["entries"]:
+        for repo_info in entries:
             repo = repo_info["repo"]
             object_ids[repo] = b64decode(repo_info["content"])
             for file_info in repo_info["files"]:

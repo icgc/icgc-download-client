@@ -23,29 +23,34 @@ import logging
 def call_api(request, api_url):
     logger = logging.getLogger("__log__")
     try:
-        resp = requests.get(request)
+        resp = requests.get(request, timeout=1)
     except requests.exceptions.ConnectionError as e:
-        logger.info("Unable to connect to the icgc api at {}.".format(api_url))
+        logger.warning("Unable to connect to the icgc api at {}.".format(api_url))
         logger.debug(e.message)
         raise RuntimeError("Unable to connect to the icgc api at {}".format(api_url))
     except requests.exceptions.Timeout as e:
-        logger.info("Error: Connection timed out")
+        logger.warning("Error: Connection timed out ")
         logger.debug(e.message)
         raise RuntimeError(e.message)
     except requests.exceptions.RequestException as e:
-        logger.info(e.message)
+        logger.warning(e.message)
         raise RuntimeError(e.message)
     if resp.status_code != 200:
-        logger.debug(resp.raw)
-        logger.info("API request {} failed with status code {}", request, resp.status_code)
-        raise RuntimeError("API request {} failed with status code {}".format(request, resp.status_code))
+        logger.warning("API request failed due to {} error.\n  {} ".format(resp.reason, resp.text))
+        raise RuntimeError("API request failed with status code {}".format(resp.status_code))
     return resp
 
 
 def read_manifest(manifest_id, api_url):
 
     request = api_url + 'manifests/' + manifest_id + '?fields=id,size,content'
-    resp = call_api(request, api_url)
+    try:
+        resp = call_api(request, api_url)
+    except RuntimeError as e:
+        if RuntimeError.message == "API request failed with status code 404":
+            logger = logging.getLogger("__log__")
+            logger.error("Manifest {} not found in database.  Please check your manifest id".format(manifest_id))
+        raise e
     entity_set = resp.json()
     return entity_set
 
