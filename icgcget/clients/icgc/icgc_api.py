@@ -26,18 +26,18 @@ def call_api(request, api_url):
         resp = requests.get(request, timeout=1)
     except requests.exceptions.ConnectionError as e:
         logger.warning("Unable to connect to the icgc api at {}.".format(api_url))
-        logger.debug(e.message)
-        raise RuntimeError("Unable to connect to the icgc api at {}".format(api_url))
+        logger.info(e.message)
+        raise RuntimeError()
     except requests.exceptions.Timeout as e:
         logger.warning("Error: Connection timed out ")
         logger.debug(e.message)
-        raise RuntimeError(e.message)
+        raise RuntimeError()
     except requests.exceptions.RequestException as e:
         logger.warning(e.message)
-        raise RuntimeError(e.message)
+        raise RuntimeError()
     if resp.status_code != 200:
         logger.warning("API request failed due to {} error.\n  {} ".format(resp.reason, resp.text))
-        raise RuntimeError("API request failed with status code {}".format(resp.status_code))
+        raise requests.HTTPError(errno=resp.status_code)
     return resp
 
 
@@ -46,11 +46,11 @@ def read_manifest(manifest_id, api_url):
     request = api_url + 'manifests/' + manifest_id + '?fields=id,size,content'
     try:
         resp = call_api(request, api_url)
-    except RuntimeError as e:
-        if RuntimeError.message == "API request failed with status code 404":
+    except requests.HTTPError as e:
+        if e.errno == 404:
             logger = logging.getLogger("__log__")
             logger.error("Manifest {} not found in database.  Please check your manifest id".format(manifest_id))
-        raise e
+        raise RuntimeError
     entity_set = resp.json()
     return entity_set
 

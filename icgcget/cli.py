@@ -66,12 +66,12 @@ def logger_setup(logfile):
 
     if logfile is not None:
         fh = logging.FileHandler(logfile)
-        fh.setLevel(logging.INFO)
+        fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
     sh = logging.StreamHandler()
-    sh.setLevel(logging.WARNING)
+    sh.setLevel(logging.INFO)
     logger.addHandler(sh)
     return logger
 
