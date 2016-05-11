@@ -22,8 +22,11 @@
 
 logfile: /icgc/mnt/logs/logfile.log
 output:
+repos:
 
-
+portal:
+  url: https://dcc.icgc.org
+  api: /api/v1/
 # IGCC Storage
 icgc:
   access:

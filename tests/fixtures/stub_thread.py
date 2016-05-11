@@ -16,9 +16,23 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-[tox]
-envlist = py27
+import threading
 
-[testenv]
-deps=pytest
-commands=py.test
+from tests.fixtures import stub_server
+
+exitFlag = 0
+
+
+class stubThread(threading.Thread):
+    def __init__(self, threadID, name):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.daemon = True
+
+    def run(self):
+        print "Starting " + self.name
+        stub_server.run()
+
+
+
