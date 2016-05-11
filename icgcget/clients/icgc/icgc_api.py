@@ -37,7 +37,7 @@ def call_api(request, api_url):
         raise RuntimeError()
     if resp.status_code != 200:
         logger.warning("API request failed due to {} error.\n  {} ".format(resp.reason, resp.text))
-        raise requests.HTTPError(errno=resp.status_code)
+        raise requests.HTTPError(resp.status_code)
     return resp
 
 
@@ -47,7 +47,7 @@ def read_manifest(manifest_id, api_url):
     try:
         resp = call_api(request, api_url)
     except requests.HTTPError as e:
-        if e.errno == 404:
+        if e.message == 404:
             logger = logging.getLogger("__log__")
             logger.error("Manifest {} not found in database.  Please check your manifest id".format(manifest_id))
         raise RuntimeError
