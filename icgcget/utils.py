@@ -33,7 +33,7 @@ def flatten_dict(d, parent_key='', sep='_'):
     return dict(items)
 
 
-def file_size(num, suffix='B'):
+def convert_size(num, suffix='B'):
     for unit in ['', 'K', 'M', 'G', 'T']:
         if abs(num) < 1024.0:
             return ["%3.2f" % num,  "%s%s" % (unit, suffix)]
@@ -67,7 +67,8 @@ def config_parse(filename):
     try:
         config_temp = yaml.safe_load(config_text)
         config_download = flatten_dict(normalize_keys(config_temp))
-        config = {'download': config_download, 'status': config_download, 'logfile': config_temp['logfile']}
+        config = {'download': config_download, 'status': config_download, 'version': config_download,
+                  'logfile': config_temp['logfile']}
     except yaml.YAMLError:
 
         print("Could not read config file {}".format(filename))
