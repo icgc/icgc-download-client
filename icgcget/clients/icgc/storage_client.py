@@ -42,3 +42,6 @@ class StorageClient(DownloadClient):
         resp = call_api(request, api_url)
         match = repo + ".download"
         return match in resp["scope"]
+
+    def version_check(self, path):
+        self._run_command([path, 'version'])

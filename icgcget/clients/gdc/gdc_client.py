@@ -48,3 +48,6 @@ class GdcDownloadClient(DownloadClient):
                 return False
             else:
                 raise e
+
+    def version_check(self, path, access=None):
+        self._run_command([path, '-v'])

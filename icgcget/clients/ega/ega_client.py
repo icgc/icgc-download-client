@@ -86,3 +86,6 @@ class EgaDownloadClient(DownloadClient):
                 return True
 
         return False
+
+    def version_check(self, path, access):
+        self._run_command(['java', '-jar', path, '-pf', access])

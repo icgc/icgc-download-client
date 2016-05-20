@@ -19,8 +19,12 @@ class DownloadClient(object):
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
         return
 
+    @abc.abstractmethod
+    def version_check(self, path, access=None):
+        return
+
     def _run_command(self, args, env=None):
-        self.logger.info(args)
+        self.logger.debug(args)
         if None in args:
             self.logger.warning("Missing argument in {}".format(args))
             return 1
