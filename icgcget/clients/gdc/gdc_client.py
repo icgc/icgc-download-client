@@ -16,7 +16,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import tempfile
-
+import re
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 from ..errors import ApiError
@@ -50,4 +50,12 @@ class GdcDownloadClient(DownloadClient):
                 raise e
 
     def version_check(self, path, access=None):
-        self._run_command([path, '-v'])
+        self._run_command([path, '-v'], self.version_parser)
+
+    def version_parser(self, output):
+        version = re.findall(r"v[0-9.]+", output)
+        if version:
+            self.logger.info("GDC Client Version {}".format(version[0]))
+
+    def download_parser(self, output):
+        self.logger.info(output)

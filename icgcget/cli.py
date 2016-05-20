@@ -89,8 +89,10 @@ def download(ctx, repos, file_ids, manifest, output,
              gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel, yes_to_all):
     api_url = get_api_url(ctx.default_map)
+
     dispatch = Dispatcher()
     object_ids = dispatch.download_manifest(repos, file_ids, manifest, output, yes_to_all, api_url)
+
     dispatch.download(object_ids, output,
                       cghub_access, cghub_path, cghub_transport_parallel,
                       ega_access, ega_path, ega_transport_parallel, ega_udt,
@@ -128,6 +130,12 @@ def status(ctx, repos, file_ids, manifest, output,
 def version(cghub_path, ega_access, ega_path, gdc_path, icgc_path):
     dispatch = Dispatcher()
     dispatch.version_checks(cghub_path, ega_access, ega_path, gdc_path, icgc_path)
+
+
+@cli.command()
+def progress():
+    dispatch = Dispatcher()
+
 
 def main():
     cli(auto_envvar_prefix='ICGCGET')

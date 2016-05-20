@@ -10,6 +10,7 @@ class DownloadClient(object):
 
     def __init__(self):
         self.logger = logging.getLogger('__log__')
+        self.jobs = []
 
     @abc.abstractmethod
     def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
@@ -23,7 +24,15 @@ class DownloadClient(object):
     def version_check(self, path, access=None):
         return
 
-    def _run_command(self, args, env=None):
+    @abc.abstractmethod
+    def version_parser(self, output):
+        return
+
+    @abc.abstractmethod
+    def download_parser(self, output):
+        self.logger.info(output)
+
+    def _run_command(self, args, parser=download_parser, env=None):
         self.logger.debug(args)
         if None in args:
             self.logger.warning("Missing argument in {}".format(args))
@@ -41,7 +50,7 @@ class DownloadClient(object):
             if process.poll() is not None:
                 break
             if output:
-                self.logger.info(output.strip())
+                parser(output.strip())
         rc = process.poll()
         return rc
 

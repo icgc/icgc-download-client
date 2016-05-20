@@ -18,7 +18,7 @@
 
 import os
 import tempfile
-
+import re
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 
@@ -43,5 +43,13 @@ class StorageClient(DownloadClient):
         match = repo + ".download"
         return match in resp["scope"]
 
-    def version_check(self, path):
-        self._run_command([path, 'version'])
+    def version_check(self, path, access=None):
+        self._run_command([path, 'version'], parser=self.version_parser)
+
+    def version_parser(self, output):
+        version = re.findall(r"Version: [0-9.]+", output)
+        if version:
+            self.logger.info("ICGC Storage Client {}".format(version[0]))
+
+    def download_parser(self, output):
+        self.logger.info(output)

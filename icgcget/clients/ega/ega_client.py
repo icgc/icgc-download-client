@@ -23,7 +23,7 @@ from random import SystemRandom
 from string import ascii_uppercase, digits
 from urllib import quote
 from requests import HTTPError
-
+import re
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 
@@ -87,5 +87,13 @@ class EgaDownloadClient(DownloadClient):
 
         return False
 
-    def version_check(self, path, access):
-        self._run_command(['java', '-jar', path, '-pf', access])
+    def version_check(self, path, access=None):
+        self._run_command(['java', '-jar', path, '-pf', access], parser=self.version_parser)
+
+    def version_parser(self, output):
+        version = re.findall(r"Version: [0-9.]+", output)
+        if version:
+            self.logger.info("EGA Client {}".format(version[0]))
+
+    def download_parser(self, output):
+        self.logger.info(output)

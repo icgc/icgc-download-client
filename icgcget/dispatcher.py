@@ -12,6 +12,7 @@ from clients.icgc.storage_client import StorageClient
 from utils import convert_size, calculate_size, donor_addition, increment_types
 
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
+VERSION = '0.5'
 
 
 class Dispatcher:
@@ -193,6 +194,7 @@ class Dispatcher:
         self.ega_client.version_check(ega_path, ega_access)
         self.gt_client.version_check(cghub_path)
         self.icgc_client.version_check(icgc_path)
+        self.logger.info("ICGC-Get Version: {}".format(VERSION))
 
     def match_repositories(self, repos, copies):
         for repository in repos:

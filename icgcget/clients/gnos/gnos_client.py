@@ -18,6 +18,7 @@
 import tempfile
 from ..errors import SubprocessError
 from ..download_client import DownloadClient
+import re
 
 
 class GnosDownloadClient(DownloadClient):
@@ -45,4 +46,12 @@ class GnosDownloadClient(DownloadClient):
             raise SubprocessError(result, "Genetorrent failed with code {}".format(result))
 
     def version_check(self, path, access=None):
-        self._run_command([path, '--version'])
+        self._run_command([path, '--version'], parser=self.version_parser)
+
+    def version_parser(self, output):
+        version = re.findall(r"elease [0-9.]+", output)
+        if version:
+            self.logger.info("Gtdownload R{}".format(version[0]))
+
+    def download_parser(self, output):
+        self.logger.info(output)

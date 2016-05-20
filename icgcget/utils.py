@@ -105,8 +105,10 @@ def calculate_size(manifest_json):
             for file_info in repo_info["files"]:
                 object_ids[repo].append(file_info["repoFileId"])
                 size += file_info["size"]
+
         else:
             object_ids[repo] = b64decode(repo_info["content"])
             for file_info in repo_info["files"]:
                 size += file_info["size"]
+
     return size, object_ids
