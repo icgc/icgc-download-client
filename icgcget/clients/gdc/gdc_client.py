@@ -33,7 +33,7 @@ class GdcDownloadClient(DownloadClient):
             call_args.extend(['-t', access])
         if udt:
             call_args.append('--udt')
-        code = self._run_command(call_args)
+        code = self._run_command(call_args, self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):

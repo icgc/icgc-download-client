@@ -18,12 +18,17 @@
 
 import logging
 import os
+
 import click
-from utils import config_parse, get_api_url
-from dispatcher import Dispatcher
+
+from clients.commands.download import Download
+from clients.commands.status_screen import StatusScreen
+from clients.commands.versions import versions
+from clients.utils import config_parse, get_api_url
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
+VERSION = '0.5'
 
 
 def logger_setup(logfile):
@@ -90,7 +95,7 @@ def download(ctx, repos, file_ids, manifest, output,
              icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel, yes_to_all):
     api_url = get_api_url(ctx.default_map)
 
-    dispatch = Dispatcher()
+    dispatch = Download()
     object_ids = dispatch.download_manifest(repos, file_ids, manifest, output, yes_to_all, api_url)
 
     dispatch.download(object_ids, output,
@@ -116,7 +121,7 @@ def status(ctx, repos, file_ids, manifest, output,
            cghub_access, cghub_path, ega_access, gdc_access, icgc_access,
            no_files):
     api_url = get_api_url(ctx.default_map)
-    dispatch = Dispatcher()
+    dispatch = StatusScreen()
     gdc_ids, gnos_ids, repo_list = dispatch.status_tables(repos, file_ids, manifest, api_url, no_files)
     dispatch.access_checks(repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, output, api_url)
 
@@ -128,13 +133,7 @@ def status(ctx, repos, file_ids, manifest, output,
 @click.option('--gdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
 @click.option('--icgc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
 def version(cghub_path, ega_access, ega_path, gdc_path, icgc_path):
-    dispatch = Dispatcher()
-    dispatch.version_checks(cghub_path, ega_access, ega_path, gdc_path, icgc_path)
-
-
-@cli.command()
-def progress():
-    dispatch = Dispatcher()
+    versions(cghub_path, ega_access, ega_path, gdc_path, icgc_path, VERSION)
 
 
 def main():

@@ -34,7 +34,7 @@ class StorageClient(DownloadClient):
         t.write(manifest)
         t.seek(0)
         call_args = [tool_path, '--profile', repo, 'download', '--manifest', t.name, '--output-dir', output]
-        code = self._run_command(call_args)
+        code = self._run_command(call_args, parser=self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
@@ -44,7 +44,7 @@ class StorageClient(DownloadClient):
         return match in resp["scope"]
 
     def version_check(self, path, access=None):
-        self._run_command([path, 'version'], parser=self.version_parser)
+        self._run_command([path, 'version'], self.version_parser)
 
     def version_parser(self, output):
         version = re.findall(r"Version: [0-9.]+", output)

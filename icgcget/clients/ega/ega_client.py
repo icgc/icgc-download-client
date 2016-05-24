@@ -42,14 +42,14 @@ class EgaDownloadClient(DownloadClient):
             else:
                 request_call_args.append('-rf')
             request_call_args.extend([object_id, '-re', key, '-label', label])
-            rc_request = self._run_command(request_call_args)
+            rc_request = self._run_command(request_call_args, self.download_parser)
             if rc_request != 0:
                 return rc_request
         download_call_args = args
         download_call_args.extend(['-dr', label, '-path', output])
         if udt:
             download_call_args.append('-udt')
-        rc_download = self._run_command(download_call_args)
+        rc_download = self._run_command(download_call_args, self.download_parser)
         if rc_download != 0:
             return rc_download
         decrypt_call_args = args
@@ -59,7 +59,7 @@ class EgaDownloadClient(DownloadClient):
                 decrypt_call_args.append(output + '/' + cip_file)
 
         decrypt_call_args.extend(['-dck', key])
-        rc_decrypt = self._run_command(decrypt_call_args)
+        rc_decrypt = self._run_command(decrypt_call_args, self.download_parser)
         if rc_decrypt != 0:
             return rc_decrypt
         return 0
@@ -88,7 +88,7 @@ class EgaDownloadClient(DownloadClient):
         return False
 
     def version_check(self, path, access=None):
-        self._run_command(['java', '-jar', path, '-pf', access], parser=self.version_parser)
+        self._run_command(['java', '-jar', path, '-pf', access], self.version_parser)
 
     def version_parser(self, output):
         version = re.findall(r"Version: [0-9.]+", output)

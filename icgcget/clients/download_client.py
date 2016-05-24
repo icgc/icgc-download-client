@@ -32,7 +32,7 @@ class DownloadClient(object):
     def download_parser(self, output):
         self.logger.info(output)
 
-    def _run_command(self, args, parser=download_parser, env=None):
+    def _run_command(self, args, parser, env=None):
         self.logger.debug(args)
         if None in args:
             self.logger.warning("Missing argument in {}".format(args))

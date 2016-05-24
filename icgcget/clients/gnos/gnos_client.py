@@ -28,7 +28,7 @@ class GnosDownloadClient(DownloadClient):
         t.write(manifest)
         t.seek(0)
         call_args = [tool_path, '-vv', '--max-children', processes, '-c', access, '-d', t.name, '-p', output]
-        code = self._run_command(call_args)
+        code = self._run_command(call_args, self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
@@ -46,7 +46,7 @@ class GnosDownloadClient(DownloadClient):
             raise SubprocessError(result, "Genetorrent failed with code {}".format(result))
 
     def version_check(self, path, access=None):
-        self._run_command([path, '--version'], parser=self.version_parser)
+        self._run_command([path, '--version'], self.version_parser)
 
     def version_parser(self, output):
         version = re.findall(r"elease [0-9.]+", output)
