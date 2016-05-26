@@ -14,13 +14,13 @@ from ..icgc.storage_client import StorageClient
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
 
 
-class Download:
-    def __init__(self):
+class DownloadDispatcher:
+    def __init__(self, pickle_path):
         self.logger = logging.getLogger("__log__")
-        self.gdc_client = GdcDownloadClient()
-        self.ega_client = EgaDownloadClient()
-        self.gt_client = GnosDownloadClient()
-        self.icgc_client = StorageClient()
+        self.gdc_client = GdcDownloadClient(pickle_path)
+        self.ega_client = EgaDownloadClient(pickle_path)
+        self.gt_client = GnosDownloadClient(pickle_path)
+        self.icgc_client = StorageClient(pickle_path)
 
     def download_manifest(self, repos, file_ids, manifest, output, yes_to_all, api_url):
         if manifest:
@@ -45,17 +45,22 @@ class Download:
                  ega_access, ega_path, ega_transport_parallel, ega_udt,
                  gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
                  icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel):
+
         if 'cghub' in object_ids and object_ids['cghub']:
             check_access(self, cghub_access, 'cghub')
-            return_code = self.gt_client.download(object_ids['cghub'], cghub_access, cghub_path, output,
-                                                  cghub_transport_parallel)
+            self.gt_client.session = object_ids['cghub']
+            uuids = self.get_uuids(object_ids['cghub'])
+            return_code = self.gt_client.download(uuids, cghub_access, cghub_path, output, cghub_transport_parallel)
+            object_ids = self.icgc_client.session
             self.check_code('Cghub', return_code)
 
         if 'aws-virginia' in object_ids and object_ids['aws-virginia']:
             check_access(self, icgc_access, 'icgc')
-            return_code = self.icgc_client.download(object_ids['aws-virginia'], icgc_access, icgc_path, output,
-                                                    icgc_transport_parallel, file_from=icgc_transport_file_from,
-                                                    repo='aws')
+            self.icgc_client.session = object_ids['aws-virginia']
+            uuids = self.get_uuids(object_ids['aws-virginia'])
+            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, output, icgc_transport_parallel,
+                                                    file_from=icgc_transport_file_from, repo='aws')
+            object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
 
         if 'ega' in object_ids and object_ids['ega']:
@@ -63,27 +68,57 @@ class Download:
             if ega_transport_parallel != '1':
                 self.logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                     "downloads.  This option is not recommended.")
-            return_code = self.ega_client.download(object_ids['ega'], ega_access, ega_path, output,
-                                                   ega_transport_parallel, ega_udt)
+            self.ega_client.session = object_ids
+            uuids = self.get_uuids(object_ids['ega'])
+            return_code = self.ega_client.download(uuids, ega_access, ega_path, output, ega_transport_parallel, ega_udt)
+            object_ids = self.icgc_client.session
             self.check_code('Ega', return_code)
 
         if 'collaboratory' in object_ids and object_ids['collaboratory']:
             check_access(self, icgc_access, 'icgc')
-            return_code = self.icgc_client.download(object_ids['collaboratory'], icgc_access, icgc_path, output,
-                                                    icgc_transport_parallel, file_from=icgc_transport_file_from,
-                                                    repo='collab')
+            self.icgc_client.session = object_ids
+            uuids = self.get_uuids(object_ids['collaboratory'])
+            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, output, icgc_transport_parallel,
+                                                    file_from=icgc_transport_file_from, repo='collab')
+            object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
 
         if 'gdc' in object_ids and object_ids['gdc']:
             check_access(self, gdc_access, 'gdc')
-            return_code = self.gdc_client.download(object_ids['gdc'], gdc_access, gdc_path, output,
-                                                   gdc_transport_parallel, gdc_udt)
+            uuids = self.get_uuids(object_ids['gdc'])
+            self.gdc_client.session = object_ids
+            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, output, gdc_transport_parallel, gdc_udt)
             self.check_code('Gdc', return_code)
+
+    def compare(self, current_session, old_session, override):
+        updated_session = {}
+        for repo in current_session:
+            updated_session[repo] = {}
+            if repo not in old_session:
+                if self.override_prompt(override):
+                    return current_session
+            for fi_id in current_session[repo]:
+                if fi_id in old_session[repo]:
+                    if old_session[repo][fi_id]['state'] != "Finished":
+                        updated_session[repo][fi_id] = current_session[repo][fi_id]
+                else:
+                    if self.override_prompt(override):
+                        return current_session
+        return updated_session
 
     def check_code(self, client, code):
         if code != 0:
             self.logger.error("{} client exited with a nonzero error code {}.".format(client, code))
             raise click.ClickException("Please check client output for error messages")
+
+    @staticmethod
+    def override_prompt(override):
+        if override:
+            return True
+        if click.confirm("Previous session data does not match current command.  Ok to delete previous session info?"):
+            return True
+        else:
+            raise click.Abort
 
     def size_check(self, size, override, output):
         free = psutil.disk_usage(output)[2]
@@ -95,3 +130,10 @@ class Download:
         elif free <= size:
             self.logger.error("Not enough space detected for download of {0}.".format(''.join(convert_size(size))) +
                               "{} of space in {}".format(''.join(convert_size(free)), output))
+
+    @staticmethod
+    def get_uuids(object_ids):
+        uuids = []
+        for object_id in object_ids:
+            uuids.append(object_ids[object_id]['uuid'])
+        return uuids

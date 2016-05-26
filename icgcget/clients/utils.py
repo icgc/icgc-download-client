@@ -19,7 +19,6 @@
 import collections
 import yaml
 import os
-from base64 import b64decode
 
 
 def flatten_dict(d, parent_key='', sep='_'):
@@ -100,15 +99,8 @@ def calculate_size(manifest_json):
     object_ids = {}
     for repo_info in manifest_json["entries"]:
         repo = repo_info["repo"]
-        if repo == 'ega':
-            object_ids['ega'] = []
-            for file_info in repo_info["files"]:
-                object_ids[repo].append(file_info["repoFileId"])
-                size += file_info["size"]
-
-        else:
-            object_ids[repo] = b64decode(repo_info["content"])
-            for file_info in repo_info["files"]:
-                size += file_info["size"]
-
+        object_ids[repo] = {}
+        for file_info in repo_info["files"]:
+            object_ids[repo][file_info['id']] = {'uuid': file_info["repoFileId"], 'state': "Not started"}
+            size += file_info["size"]
     return size, object_ids

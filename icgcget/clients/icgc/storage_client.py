@@ -17,23 +17,26 @@
 #
 
 import os
-import tempfile
 import re
+import pickle
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 
 
 class StorageClient(DownloadClient):
 
-    def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
+    def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
         os.environ['ACCESSTOKEN'] = access
         os.environ['TRANSPORT_PARALLEL'] = processes
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
-        t = tempfile.NamedTemporaryFile()
-        t.write(manifest)
-        t.seek(0)
-        call_args = [tool_path, '--profile', repo, 'download', '--manifest', t.name, '--output-dir', output]
+        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
+        call_args.extend(uuids)
+        call_args.extend(['--output-dir', output])
+        if repo == 'collab':
+            self.repo = 'collaboratory'
+        elif repo == 'aws':
+            self.repo = 'aws-virginia'
         code = self._run_command(call_args, parser=self.download_parser)
         return code
 
@@ -46,10 +49,16 @@ class StorageClient(DownloadClient):
     def version_check(self, path, access=None):
         self._run_command([path, 'version'], self.version_parser)
 
-    def version_parser(self, output):
-        version = re.findall(r"Version: [0-9.]+", output)
+    def version_parser(self, response):
+        version = re.findall(r"Version: [0-9.]+", response)
         if version:
             self.logger.info("ICGC Storage Client {}".format(version[0]))
 
-    def download_parser(self, output):
-        self.logger.info(output)
+    def download_parser(self, response):
+        file_id = re.findall(r": \w{8}-\w{4}-\w{4}-\w{4}-\w{12} ", response)
+        if file_id:
+            file_id = file_id[0][1:-1]
+            file_name = re.findall(r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}.*", response)
+            self.session_update(file_id, self.repo)
+            pickle.dump(self.session, open(self.path, 'w'))
+        self.logger.info(response)

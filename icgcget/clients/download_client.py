@@ -8,9 +8,11 @@ import re
 class DownloadClient(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, pickle_path=None):
         self.logger = logging.getLogger('__log__')
         self.jobs = []
+        self.session = {}
+        self.path = pickle_path
 
     @abc.abstractmethod
     def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
@@ -53,6 +55,13 @@ class DownloadClient(object):
                 parser(output.strip())
         rc = process.poll()
         return rc
+
+    def session_update(self, file_id, repo):
+        for fi_id, file_object in self.session[repo].items():
+            if file_object['uuid'] == file_id:
+                file_object['state'] = 'Running'
+            elif file_object['uuid'] != file_id and file_object['state'] == 'Running':
+                file_object['state'] = 'Finished'
 
     def _run_test_command(self, args, env=None):
         if None in args:

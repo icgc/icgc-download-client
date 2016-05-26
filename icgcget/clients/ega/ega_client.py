@@ -19,11 +19,12 @@
 
 import fnmatch
 import os
+import re
+import pickle
 from random import SystemRandom
 from string import ascii_uppercase, digits
 from urllib import quote
 from requests import HTTPError
-import re
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 
@@ -90,10 +91,16 @@ class EgaDownloadClient(DownloadClient):
     def version_check(self, path, access=None):
         self._run_command(['java', '-jar', path, '-pf', access], self.version_parser)
 
-    def version_parser(self, output):
-        version = re.findall(r"Version: [0-9.]+", output)
+    def version_parser(self, response):
+        version = re.findall(r"Version: [0-9.]+", response)
         if version:
             self.logger.info("EGA Client {}".format(version[0]))
 
-    def download_parser(self, output):
-        self.logger.info(output)
+    def download_parser(self, response):
+        file_id = re.findall(r'_EGA[A-Z0-9]*_', response)
+        if file_id:
+            file_id = file_id[0][1:-1]
+            filename = re.findall(r'_EGA*.cip', response)
+            self.session_update(file_id, 'ega')
+            pickle.dump(self.session, open(self.path, 'w'))
+        self.logger.info(response)

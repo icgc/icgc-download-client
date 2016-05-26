@@ -18,12 +18,12 @@
 
 import logging
 import os
-
+import pickle
 import click
 
-from clients.commands.download import Download
-from clients.commands.status_screen import StatusScreen
-from clients.commands.versions import versions
+from clients.commands.download import DownloadDispatcher
+from clients.commands.status_screen import StatusScreenDispatcher
+from clients.commands.versions import versions_command
 from clients.utils import config_parse, get_api_url
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
@@ -94,15 +94,24 @@ def download(ctx, repos, file_ids, manifest, output,
              gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel, yes_to_all):
     api_url = get_api_url(ctx.default_map)
-
-    dispatch = Download()
+    staging = output + '/.staging'
+    if not os.path.exists(staging):
+        os.umask(0000)
+        os.mkdir(staging, 0777)
+    pickle_path = output + '/.staging/filestate.pk'
+    dispatch = DownloadDispatcher(pickle_path)
     object_ids = dispatch.download_manifest(repos, file_ids, manifest, output, yes_to_all, api_url)
 
+    if os.path.isfile(pickle_path):
+        session_info = pickle.load(open(pickle_path, 'r+'))
+        object_ids = dispatch.compare(object_ids, session_info, yes_to_all)
+    pickle.dump(object_ids, open(pickle_path, 'w'), pickle.HIGHEST_PROTOCOL)
     dispatch.download(object_ids, output,
                       cghub_access, cghub_path, cghub_transport_parallel,
                       ega_access, ega_path, ega_transport_parallel, ega_udt,
                       gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
                       icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel)
+    os.remove(pickle_path)
 
 
 @cli.command()
@@ -121,7 +130,7 @@ def status(ctx, repos, file_ids, manifest, output,
            cghub_access, cghub_path, ega_access, gdc_access, icgc_access,
            no_files):
     api_url = get_api_url(ctx.default_map)
-    dispatch = StatusScreen()
+    dispatch = StatusScreenDispatcher()
     gdc_ids, gnos_ids, repo_list = dispatch.status_tables(repos, file_ids, manifest, api_url, no_files)
     dispatch.access_checks(repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, output, api_url)
 
@@ -133,7 +142,7 @@ def status(ctx, repos, file_ids, manifest, output,
 @click.option('--gdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
 @click.option('--icgc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
 def version(cghub_path, ega_access, ega_path, gdc_path, icgc_path):
-    versions(cghub_path, ega_access, ega_path, gdc_path, icgc_path, VERSION)
+    versions_command(cghub_path, ega_access, ega_path, gdc_path, icgc_path, VERSION)
 
 
 def main():

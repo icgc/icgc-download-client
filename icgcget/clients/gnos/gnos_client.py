@@ -15,19 +15,19 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-import tempfile
+
+import re
+import pickle
 from ..errors import SubprocessError
 from ..download_client import DownloadClient
-import re
 
 
 class GnosDownloadClient(DownloadClient):
 
-    def download(self, manifest, access, tool_path, output, processes, udt=None, file_from=None, repo=None):
-        t = tempfile.NamedTemporaryFile()
-        t.write(manifest)
-        t.seek(0)
-        call_args = [tool_path, '-vv', '--max-children', processes, '-c', access, '-d', t.name, '-p', output]
+    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None):
+        call_args = [tool_path, '-vv', '-c', access, '-d']
+        call_args.extend(uuids)
+        call_args.extend(['-p', output])
         code = self._run_command(call_args, self.download_parser)
         return code
 
@@ -48,10 +48,13 @@ class GnosDownloadClient(DownloadClient):
     def version_check(self, path, access=None):
         self._run_command([path, '--version'], self.version_parser)
 
-    def version_parser(self, output):
-        version = re.findall(r"elease [0-9.]+", output)
+    def version_parser(self, response):
+        version = re.findall(r"elease [0-9.]+", response)
         if version:
             self.logger.info("Gtdownload R{}".format(version[0]))
 
-    def download_parser(self, output):
-        self.logger.info(output)
+    def download_parser(self, response):
+        self.logger.info(response)
+        filename = re.findall(r'filename=*')
+        if filename:
+            filename = filename[9:]

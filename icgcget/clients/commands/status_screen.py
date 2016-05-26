@@ -14,7 +14,7 @@ from ..gnos.gnos_client import GnosDownloadClient
 from ..icgc.storage_client import StorageClient
 
 
-class StatusScreen:
+class StatusScreenDispatcher:
     def __init__(self):
         self.logger = logging.getLogger("__log__")
         self.gdc_client = GdcDownloadClient()

@@ -5,7 +5,7 @@ from ..gnos.gnos_client import GnosDownloadClient
 from ..icgc.storage_client import StorageClient
 
 
-def versions(cghub_path, ega_access, ega_path, gdc_path, icgc_path, version_num):
+def versions_command(cghub_path, ega_access, ega_path, gdc_path, icgc_path, version_num):
     logger = logging.getLogger()
     gdc_client = GdcDownloadClient()
     ega_client = EgaDownloadClient()
