@@ -17,12 +17,15 @@
 #
 
 import re
-import pickle
 from ..errors import SubprocessError
 from ..download_client import DownloadClient
 
 
 class GnosDownloadClient(DownloadClient):
+
+    def __init__(self, pickle_path=None):
+        super(GnosDownloadClient, self) .__init__(pickle_path)
+        self.repo = 'cghub'
 
     def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None):
         call_args = [tool_path, '-vv', '-c', access, '-d']
@@ -55,6 +58,8 @@ class GnosDownloadClient(DownloadClient):
 
     def download_parser(self, response):
         self.logger.info(response)
-        filename = re.findall(r'filename=*')
+        filename = re.findall(r'filename=*', response)
         if filename:
             filename = filename[9:]
+            self.session_update(filename, 'cghub')
+

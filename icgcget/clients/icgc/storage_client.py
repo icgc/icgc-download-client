@@ -18,12 +18,14 @@
 
 import os
 import re
-import pickle
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 
 
 class StorageClient(DownloadClient):
+
+    def __init__(self, pickle_path=None):
+        super(StorageClient, self) .__init__(pickle_path)
 
     def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
         os.environ['ACCESSTOKEN'] = access
@@ -55,10 +57,8 @@ class StorageClient(DownloadClient):
             self.logger.info("ICGC Storage Client {}".format(version[0]))
 
     def download_parser(self, response):
-        file_id = re.findall(r": \w{8}-\w{4}-\w{4}-\w{4}-\w{12} ", response)
-        if file_id:
-            file_id = file_id[0][1:-1]
-            file_name = re.findall(r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}.*", response)
-            self.session_update(file_id, self.repo)
-            pickle.dump(self.session, open(self.path, 'w'))
+        filename = re.findall(r"\(\w{8}-\w{4}-\w{4}-\w{4}-\w{12}.+", response)
+        if filename:
+            filename = filename[0][1:-1]
+            self.session_update(filename, self.repo)
         self.logger.info(response)

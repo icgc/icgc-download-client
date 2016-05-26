@@ -2,7 +2,8 @@ import logging
 
 import click
 import psutil
-
+import os
+import shutil
 from command_utils import api_error_catch, filter_manifest_ids, check_access
 from ..utils import calculate_size, convert_size
 from .. import portal_client
@@ -36,11 +37,34 @@ class DownloadDispatcher:
         if not manifest_json["unique"] or len(manifest_json["entries"]) != 1:
             filter_manifest_ids(self, manifest_json)
         size, object_ids = calculate_size(manifest_json)
+        if manifest:
+            file_ids = []
+            for repo in object_ids:
+                file_ids.append(object_ids[repo].keys())
+        entities = api_error_catch(self, portal.get_metadata_bulk, file_ids, api_url)
+        for entity in entities:
+            for repo_ids in object_ids:
+                if entity['id'] in object_ids[repo_ids]:
+                    repo = repo_ids
+                    break
+            else:
+                continue
 
+            filecopies = entity['fileCopies']
+            for copy in filecopies:
+                if copy['repoCode'] == repo:
+                    if copy["fileName"] in os.listdir(output):
+                        object_ids[repo].pop(entity['id'])
+                        self.logger.warning("File {} found in download directory, skipping".format(entity['id']))
+                        break
+                    object_ids[repo][entity["id"]]['filename'] = copy["fileName"]
+                    if "fileName" in copy["indexFile"]:
+                        object_ids[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]
+                        break
         self.size_check(size, yes_to_all, output)
         return object_ids
 
-    def download(self, object_ids, output,
+    def download(self, object_ids, staging, output,
                  cghub_access, cghub_path, cghub_transport_parallel,
                  ega_access, ega_path, ega_transport_parallel, ega_udt,
                  gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
@@ -48,20 +72,22 @@ class DownloadDispatcher:
 
         if 'cghub' in object_ids and object_ids['cghub']:
             check_access(self, cghub_access, 'cghub')
-            self.gt_client.session = object_ids['cghub']
+            self.gt_client.session = object_ids
             uuids = self.get_uuids(object_ids['cghub'])
-            return_code = self.gt_client.download(uuids, cghub_access, cghub_path, output, cghub_transport_parallel)
+            return_code = self.gt_client.download(uuids, cghub_access, cghub_path, staging, cghub_transport_parallel)
             object_ids = self.icgc_client.session
             self.check_code('Cghub', return_code)
+            self.move_files(staging, output)
 
         if 'aws-virginia' in object_ids and object_ids['aws-virginia']:
             check_access(self, icgc_access, 'icgc')
-            self.icgc_client.session = object_ids['aws-virginia']
+            self.icgc_client.session = object_ids
             uuids = self.get_uuids(object_ids['aws-virginia'])
-            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, output, icgc_transport_parallel,
+            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='aws')
             object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
+            self.move_files(staging, output)
 
         if 'ega' in object_ids and object_ids['ega']:
             check_access(self, ega_access, 'ega')
@@ -70,25 +96,28 @@ class DownloadDispatcher:
                                     "downloads.  This option is not recommended.")
             self.ega_client.session = object_ids
             uuids = self.get_uuids(object_ids['ega'])
-            return_code = self.ega_client.download(uuids, ega_access, ega_path, output, ega_transport_parallel, ega_udt)
+            return_code = self.ega_client.download(uuids, ega_access, ega_path, staging, ega_transport_parallel, ega_udt)
             object_ids = self.icgc_client.session
             self.check_code('Ega', return_code)
+            self.move_files(staging, output)
 
         if 'collaboratory' in object_ids and object_ids['collaboratory']:
             check_access(self, icgc_access, 'icgc')
             self.icgc_client.session = object_ids
             uuids = self.get_uuids(object_ids['collaboratory'])
-            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, output, icgc_transport_parallel,
+            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='collab')
             object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
+            self.move_files(staging, output)
 
         if 'gdc' in object_ids and object_ids['gdc']:
             check_access(self, gdc_access, 'gdc')
             uuids = self.get_uuids(object_ids['gdc'])
             self.gdc_client.session = object_ids
-            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, output, gdc_transport_parallel, gdc_udt)
+            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, staging, gdc_transport_parallel, gdc_udt)
             self.check_code('Gdc', return_code)
+            self.move_files(staging, output)
 
     def compare(self, current_session, old_session, override):
         updated_session = {}
@@ -137,3 +166,11 @@ class DownloadDispatcher:
         for object_id in object_ids:
             uuids.append(object_ids[object_id]['uuid'])
         return uuids
+
+    def move_files(self, staging, output):
+        for staged_file in os.listdir(staging):
+            if staged_file != "state.pk":
+                try:
+                    shutil.move(staging + '/' + staged_file, output)
+                except shutil.Error:
+                    self.logger.warning('File {} already present in download directory'.format(staged_file))

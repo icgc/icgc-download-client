@@ -20,7 +20,6 @@
 import fnmatch
 import os
 import re
-import pickle
 from random import SystemRandom
 from string import ascii_uppercase, digits
 from urllib import quote
@@ -31,7 +30,12 @@ from ..download_client import DownloadClient
 
 class EgaDownloadClient(DownloadClient):
 
+    def __init__(self, pickle_path=None):
+        super(EgaDownloadClient, self) .__init__(pickle_path)
+        self.repo = 'ega'
+
     def download(self, object_ids, access, tool_path, output, parallel, udt=None, file_from=None, repo=None):
+
         key = ''.join(SystemRandom().choice(ascii_uppercase + digits) for _ in range(4))
         label = object_ids[0] + '_download_request'
         args = ['java', '-jar', tool_path, '-pf', access, '-nt', parallel]
@@ -97,10 +101,8 @@ class EgaDownloadClient(DownloadClient):
             self.logger.info("EGA Client {}".format(version[0]))
 
     def download_parser(self, response):
-        file_id = re.findall(r'_EGA[A-Z0-9]*_', response)
-        if file_id:
-            file_id = file_id[0][1:-1]
-            filename = re.findall(r'_EGA*.cip', response)
-            self.session_update(file_id, 'ega')
-            pickle.dump(self.session, open(self.path, 'w'))
+        filename = re.findall(r'/[^/]+.cip  \(', response)
+        if filename:
+            filename = filename[0][1:-7]
+            self.session_update(filename, 'ega')
         self.logger.info(response)

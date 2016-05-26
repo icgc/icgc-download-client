@@ -1,5 +1,6 @@
 import abc
 import logging
+import pickle
 import subprocess
 import subprocess32
 import re
@@ -8,11 +9,13 @@ import re
 class DownloadClient(object):
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractmethod
     def __init__(self, pickle_path=None):
         self.logger = logging.getLogger('__log__')
         self.jobs = []
         self.session = {}
         self.path = pickle_path
+        self.repo = ''
 
     @abc.abstractmethod
     def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
@@ -54,14 +57,17 @@ class DownloadClient(object):
             if output:
                 parser(output.strip())
         rc = process.poll()
+        if rc == 0:
+            self.session_update('', self.repo)  # clear any running files if exit cleanly
         return rc
 
-    def session_update(self, file_id, repo):
+    def session_update(self, file_name, repo):
         for fi_id, file_object in self.session[repo].items():
-            if file_object['uuid'] == file_id:
+            if file_object['index_filename'] == file_name or file_object['filename'] == file_name:
                 file_object['state'] = 'Running'
-            elif file_object['uuid'] != file_id and file_object['state'] == 'Running':
+            elif file_object['state'] == 'Running':  # only one file at a time can be downloaded.
                 file_object['state'] = 'Finished'
+        pickle.dump(self.session, open(self.path, 'w'))
 
     def _run_test_command(self, args, env=None):
         if None in args:

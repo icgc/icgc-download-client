@@ -17,13 +17,16 @@
 #
 
 import re
-import pickle
 from ..portal_client import call_api
 from ..download_client import DownloadClient
 from ..errors import ApiError
 
 
 class GdcDownloadClient(DownloadClient):
+
+    def __init__(self, pickle_path=None):
+        super(GdcDownloadClient, self) .__init__(pickle_path)
+        self.repo = 'gdc'
 
     def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
         call_args = [tool_path, 'download']

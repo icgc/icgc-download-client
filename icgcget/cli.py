@@ -98,15 +98,15 @@ def download(ctx, repos, file_ids, manifest, output,
     if not os.path.exists(staging):
         os.umask(0000)
         os.mkdir(staging, 0777)
-    pickle_path = output + '/.staging/filestate.pk'
+    pickle_path = output + '/.staging/state.pk'
     dispatch = DownloadDispatcher(pickle_path)
-    object_ids = dispatch.download_manifest(repos, file_ids, manifest, output, yes_to_all, api_url)
+    object_ids = dispatch.download_manifest(repos, file_ids, manifest, staging, yes_to_all, api_url)
 
     if os.path.isfile(pickle_path):
         session_info = pickle.load(open(pickle_path, 'r+'))
         object_ids = dispatch.compare(object_ids, session_info, yes_to_all)
     pickle.dump(object_ids, open(pickle_path, 'w'), pickle.HIGHEST_PROTOCOL)
-    dispatch.download(object_ids, output,
+    dispatch.download(object_ids, staging, output,
                       cghub_access, cghub_path, cghub_transport_parallel,
                       ega_access, ega_path, ega_transport_parallel, ega_udt,
                       gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
