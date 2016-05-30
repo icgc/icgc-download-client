@@ -23,7 +23,7 @@ import threading
 import pytest
 from click.testing import CliRunner
 
-from icgcget import cli
+from cli import cli
 from tests.fixtures import stub_thread
 
 

@@ -19,17 +19,20 @@
 
 import logging
 from collections import OrderedDict
+
 import click
-from tabulate import tabulate
-from utils import check_access, api_error_catch, filter_manifest_ids
-from icgcget.clients.errors import SubprocessError
-from icgcget.clients.utils import convert_size, donor_addition, increment_types
 from icgcget.clients import portal_client
 from icgcget.clients.ega.ega_client import EgaDownloadClient
+from icgcget.clients.errors import SubprocessError
 from icgcget.clients.gdc.gdc_client import GdcDownloadClient
-from icgcget.clients.gnos.gnos_client import GnosDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
+from icgcget.clients.gnos.gnos_client import GnosDownloadClient
+from icgcget.clients.utils import convert_size, donor_addition, increment_types
+from tabulate import tabulate
+
+
+from utils import check_access, api_error_catch, filter_manifest_ids
 
 
 class StatusScreenDispatcher:
@@ -123,7 +126,7 @@ class StatusScreenDispatcher:
         return gdc_ids, cghub_ids, repo_list
 
     def access_checks(self, repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access,
-                      pdc_path, output, api_url, cghub_ids=None, gdc_ids=None, pdc_ids=None):
+                      pdc_region, pdc_path, output, api_url, cghub_ids=None, gdc_ids=None, pdc_ids=None):
         if "collaboratory" in repo_list:
             check_access(self, icgc_access, "icgc")
             self.access_response(self.icgc_client.access_check(icgc_access, repo="collab", api_url=api_url),
@@ -147,11 +150,11 @@ class StatusScreenDispatcher:
             except SubprocessError as e:
                 self.logger.error(e.message)
                 raise click.Abort
-        if 'pdc' in repo_list:  # We don't get general access credentials to gdc, can't check without files.
+        if 'pdc' in repo_list:
             check_access(self, pdc_access, 'pdc')
             try:
-                self.access_response(self.pdc_client.access_check(pdc_access, pdc_ids, pdc_path, output=output),
-                                     "cghub files.")
+                self.access_response(self.pdc_client.access_check(pdc_access, pdc_ids, pdc_path, output=output,
+                                                                  region=pdc_region), "pdc files.")
             except SubprocessError as e:
                 self.logger.error(e.message)
                 raise click.Abort

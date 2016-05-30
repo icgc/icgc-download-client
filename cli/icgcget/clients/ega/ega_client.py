@@ -23,9 +23,11 @@ import re
 from random import SystemRandom
 from string import ascii_uppercase, digits
 from urllib import quote
+
 from requests import HTTPError
-from icgcget.clients.portal_client import call_api
+
 from icgcget.clients.download_client import DownloadClient
+from icgcget.clients.portal_client import call_api
 
 
 class EgaDownloadClient(DownloadClient):
@@ -93,7 +95,7 @@ class EgaDownloadClient(DownloadClient):
 
         return False
 
-    def version_check(self, path, access=None):
+    def print_version(self, path, access=None):
         self._run_command(['java', '-jar', path, '-pf', access], self.version_parser)
 
     def version_parser(self, response):

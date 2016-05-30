@@ -16,53 +16,50 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import os
 import re
-from icgcget.clients.portal_client import call_api
+
 from icgcget.clients.download_client import DownloadClient
-from icgcget.clients.errors import ApiError
+from icgcget.clients.portal_client import call_api
 
 
-class GdcDownloadClient(DownloadClient):
+class StorageClient(DownloadClient):
 
     def __init__(self, pickle_path=None):
-        super(GdcDownloadClient, self) .__init__(pickle_path)
-        self.repo = 'gdc'
+        super(StorageClient, self) .__init__(pickle_path)
 
     def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None, region=None):
-        call_args = [tool_path, 'download']
+        os.environ['ACCESSTOKEN'] = access
+        os.environ['TRANSPORT_PARALLEL'] = processes
+        if file_from is not None:
+            os.environ['TRANSPORT_FILEFROM'] = file_from
+        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
         call_args.extend(uuids)
-        call_args.extend(['--dir', output, '-n', processes])
-        if access is not None:  # Enables download of unsecured gdc data
-            call_args.extend(['-t', access])
-        if udt:
-            call_args.append('--udt')
-        code = self._run_command(call_args, self.download_parser)
+        call_args.extend(['--output-dir', output])
+        if repo == 'collab':
+            self.repo = 'collaboratory'
+        elif repo == 'aws':
+            self.repo = 'aws-virginia'
+        code = self._run_command(call_args, parser=self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
-        base_url = 'https://gdc-api.nci.nih.gov/data/'
-        request = base_url + ','.join(uuids)
-        header = {'X-auth-Token': access}
-        try:
-            call_api(request, base_url, header, head=True)
-            return True
-        except ApiError as e:
-            if e.code == 403:
-                return False
-            else:
-                raise e
+        request = api_url + 'settings/tokens/' + access
+        resp = call_api(request, api_url)
+        match = repo + ".download"
+        return match in resp["scope"]
 
-    def version_check(self, path, access=None):
-        self._run_command([path, '-v'], self.version_parser)
+    def print_version(self, path, access=None):
+        self._run_command([path, 'version'], self.version_parser)
 
     def version_parser(self, response):
-        version = re.findall(r"v[0-9.]+", response)
+        version = re.findall(r"Version: [0-9.]+", response)
         if version:
-            self.logger.info("GDC Client Version {}".format(version[0]))
+            self.logger.info("ICGC Storage Client {}".format(version[0]))
 
     def download_parser(self, response):
-        file_id = re.findall(r'v------ \w{8}-\w{4}-\w{4}-\w{4}-\w{12} ------v', response)
-        if file_id:
-            file_id = file_id[8:-8]
-            self.session_update(file_id, 'gdc')
+        filename = re.findall(r"\(\w{8}-\w{4}-\w{4}-\w{4}-\w{12}.+", response)
+        if filename:
+            filename = filename[0][1:-1]
+            self.session_update(filename, self.repo)
         self.logger.info(response)

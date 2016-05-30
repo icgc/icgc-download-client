@@ -102,6 +102,6 @@ def calculate_size(manifest_json):
         object_ids[repo] = {}
         for file_info in repo_info["files"]:
             object_ids[repo][file_info['id']] = {'uuid': file_info["repoFileId"], 'state': "Not started",
-                                                 'filename': 'None', 'index_filename': 'None'}
+                                                 'filename': 'None', 'index_filename': 'None', 'fileUrl': 'None'}
             size += file_info["size"]
     return size, object_ids

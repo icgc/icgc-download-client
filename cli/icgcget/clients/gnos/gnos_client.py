@@ -17,8 +17,9 @@
 #
 
 import re
-from icgcget.clients.errors import SubprocessError
+
 from icgcget.clients.download_client import DownloadClient
+from icgcget.clients.errors import SubprocessError
 
 
 class GnosDownloadClient(DownloadClient):
@@ -48,7 +49,7 @@ class GnosDownloadClient(DownloadClient):
         else:
             raise SubprocessError(result, "Genetorrent failed with code {}".format(result))
 
-    def version_check(self, path, access=None):
+    def print_version(self, path, access=None):
         self._run_command([path, '--version'], self.version_parser)
 
     def version_parser(self, response):

@@ -17,18 +17,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import logging
-import click
-import psutil
 import os
 import shutil
-from utils import api_error_catch, filter_manifest_ids, check_access
-from icgcget.clients.utils import calculate_size, convert_size
+
+import click
+import psutil
 from icgcget.clients import portal_client
+from icgcget.clients.gnos.gnos_client import GnosDownloadClient
 from icgcget.clients.ega.ega_client import EgaDownloadClient
 from icgcget.clients.gdc.gdc_client import GdcDownloadClient
-from icgcget.clients.gnos.gnos_client import GnosDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
+from icgcget.clients.utils import calculate_size, convert_size
+
+from utils import api_error_catch, filter_manifest_ids, check_access
 
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
 
@@ -71,7 +73,7 @@ class DownloadDispatcher:
 
             filecopies = entity['fileCopies']
             for copy in filecopies:
-                if copy['repoCode'] == repo:
+                if copy['repoCode'] == repo and repo != 'pdc':  # remove when pdc gets filenames
                     if copy["fileName"] in os.listdir(output):
                         object_ids[repo].pop(entity['id'])
                         self.logger.warning("File {} found in download directory, skipping".format(entity['id']))
@@ -80,6 +82,8 @@ class DownloadDispatcher:
                     if "fileName" in copy["indexFile"]:
                         object_ids[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]
                         break
+                elif copy['repoCode'] == repo and repo == 'pdc':
+                    object_ids[repo][entity['id']]['fileUrl'] = 's3' + copy['repoBaseUrl'][5:] + copy['repoDataPath']
         self.size_check(size, yes_to_all, output)
         return object_ids
 
@@ -88,7 +92,7 @@ class DownloadDispatcher:
                  ega_access, ega_path, ega_transport_parallel, ega_udt,
                  gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
                  icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
-                 pdc_access, pdc_path, pdc_transport_parallel):
+                 pdc_access, pdc_path, pdc_region, pdc_transport_parallel):
 
         if 'cghub' in object_ids and object_ids['cghub']:
             check_access(self, cghub_access, 'cghub')
@@ -131,19 +135,23 @@ class DownloadDispatcher:
             self.check_code('Icgc', return_code)
             self.move_files(staging, output)
 
-        if 'gdc' in object_ids and object_ids['gdc']:
+        if 'pdc' in object_ids and object_ids['pdc']:
             check_access(self, pdc_access, 'pdc')
-            uuids = self.get_uuids(object_ids['pdc'])
+            urls = []
+            for object_id in object_ids['pdc']:
+                urls.append(object_ids['pdc'][object_id]['fileUrl'])
             self.pdc_client.session = object_ids
-            return_code = self.pdc_client.download(uuids, pdc_access, pdc_path, staging, pdc_transport_parallel )
-            self.check_code('Gdc', return_code)
+            return_code = self.pdc_client.download(urls, pdc_access, pdc_path, staging, pdc_transport_parallel,
+                                                   region=pdc_region)
+            self.check_code('Pdc', return_code)
             self.move_files(staging, output)
 
         if 'gdc' in object_ids and object_ids['gdc']:
             check_access(self, gdc_access, 'gdc')
             uuids = self.get_uuids(object_ids['gdc'])
             self.gdc_client.session = object_ids
-            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, staging, gdc_transport_parallel, gdc_udt)
+            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, staging, gdc_transport_parallel,
+                                                   gdc_udt)
             self.check_code('Gdc', return_code)
             self.move_files(staging, output)
 

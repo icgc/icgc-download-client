@@ -19,6 +19,7 @@
 
 import os
 import re
+
 from icgcget.clients.download_client import DownloadClient
 
 
@@ -26,8 +27,9 @@ class PdcDownloadClient(DownloadClient):
 
     def __init__(self, pickle_path=None):
         super(PdcDownloadClient, self).__init__(pickle_path)
+        self.repo = 'pdc'
 
-    def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None,
+    def download(self, manifests, access, tool_path, output,  processes, udt=None, file_from=None, repo=None,
                  region=None):
         access_file = open(access)
         key = access_file.readline()
@@ -35,8 +37,9 @@ class PdcDownloadClient(DownloadClient):
         os.environ['AWS_ACCESS_KEY_ID'] = key
         os.environ['AWS_SECRET_ACCESS_KEY'] = secret_key
         os.environ['AWS_DEFAULT_REGION'] = region
-        call_args = [tool_path, 's3', 'cp', manifest, output + '/']
-        self._run_command(call_args, self.download_parser)
+        for manifest in manifests:
+            call_args = [tool_path, 's3', 'cp', manifest, output + '/']
+            self._run_command(call_args, self.download_parser)
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         access_file = open(access)
@@ -48,7 +51,7 @@ class PdcDownloadClient(DownloadClient):
         call_args = [path, 's3', 'cp', uuids, output + '/', '--dry-run']
         self._run_test_command(call_args)
 
-    def version_check(self, path, access=None):
+    def print_version(self, path, access=None):
         call_args = [path, '--version']
         self._run_command(call_args, self.version_parser)
 
@@ -58,4 +61,4 @@ class PdcDownloadClient(DownloadClient):
     def version_parser(self, output):
         version = re.findall(r"aws-cli/[0-9.]+", output)
         if version:
-            self.logger.info("AWS CLI version: {}".format(version[0][7:]))
+            self.logger.info("AWS CLI version: {}".format(version[0][8:]))

@@ -17,7 +17,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import click
-from icgcget.clients.errors import ApiError
+
+from icgcget.clients import errors
+
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
 
 
@@ -47,6 +49,6 @@ def check_access(self, access, name):
 def api_error_catch(self, func, *args):
     try:
         return func(*args)
-    except ApiError as e:
+    except errors.ApiError as e:
         self.logger.error(e.message)
         raise click.Abort

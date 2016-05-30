@@ -21,14 +21,13 @@ import os
 import pickle
 
 import click
-from commands.download import DownloadDispatcher
-from commands.status import StatusScreenDispatcher
-
-from clients.utils import config_parse, get_api_url
+from icgcget.clients.utils import config_parse, get_api_url
 from icgcget.commands.versions import versions_command
+from icgcget.commands.status import StatusScreenDispatcher
+from icgcget.commands.download import DownloadDispatcher
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
-REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
+REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
 VERSION = '0.5'
 
 
@@ -89,6 +88,7 @@ def cli(ctx, config, logfile):
 @click.option('--icgc-transport-parallel', type=click.STRING)
 @click.option('--pdc-access')
 @click.option('--pdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
+@click.option('--pdc-region', type=click.STRING)
 @click.option('--pdc-transport-parallel', type=click.STRING)
 @click.option('--yes-to-all', '-y', is_flag=True, default=False, help="Bypass all confirmation prompts")
 @click.pass_context
@@ -97,7 +97,7 @@ def download(ctx, repos, file_ids, manifest, output,
              ega_access, ega_path, ega_transport_parallel, ega_udt,
              gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
-             pdc_access, pdc_path, pdc_transport_parallel, yes_to_all):
+             pdc_access, pdc_path, pdc_region, pdc_transport_parallel, yes_to_all):
     api_url = get_api_url(ctx.default_map)
     staging = output + '/.staging'
     if not os.path.exists(staging):
@@ -116,7 +116,7 @@ def download(ctx, repos, file_ids, manifest, output,
                       ega_access, ega_path, ega_transport_parallel, ega_udt,
                       gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
                       icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
-                      pdc_access, pdc_path, pdc_transport_parallel)
+                      pdc_access, pdc_path, pdc_region, pdc_transport_parallel)
     os.remove(pickle_path)
 
 
@@ -131,17 +131,18 @@ def download(ctx, repos, file_ids, manifest, output,
 @click.option('--gdc-access', type=click.STRING)
 @click.option('--icgc-access', type=click.STRING)
 @click.option('--pdc-access', type=click.STRING)
-@click.option('--pdc_path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
+@click.option('--pdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True))
+@click.option('--pdc-region', type=click.STRING)
 @click.option('--no-files', '-nf', is_flag=True, default=False, help="Do not show individual file information")
 @click.pass_context
 def status(ctx, repos, file_ids, manifest, output,
-           cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access, pdc_path,
+           cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access, pdc_path, pdc_region,
            no_files):
     api_url = get_api_url(ctx.default_map)
     dispatch = StatusScreenDispatcher()
     gdc_ids, gnos_ids, repo_list = dispatch.status_tables(repos, file_ids, manifest, api_url, no_files)
     dispatch.access_checks(repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access,
-                           pdc_path, output, api_url)
+                           pdc_path, pdc_region, output, api_url)
 
 
 @cli.command()

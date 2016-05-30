@@ -27,7 +27,7 @@ class DownloadClient(object):
         return
 
     @abc.abstractmethod
-    def version_check(self, path, access=None):
+    def print_version(self, path, access=None):
         return
 
     @abc.abstractmethod
@@ -58,7 +58,7 @@ class DownloadClient(object):
             if output:
                 parser(output.strip())
         rc = process.poll()
-        if rc == 0:
+        if rc == 0 and self.session:
             self.session_update('', self.repo)  # clear any running files if exit cleanly
         return rc
 
