@@ -24,8 +24,8 @@ from random import SystemRandom
 from string import ascii_uppercase, digits
 from urllib import quote
 from requests import HTTPError
-from ..portal_client import call_api
-from ..download_client import DownloadClient
+from icgcget.clients.portal_client import call_api
+from icgcget.clients.download_client import DownloadClient
 
 
 class EgaDownloadClient(DownloadClient):
@@ -34,7 +34,8 @@ class EgaDownloadClient(DownloadClient):
         super(EgaDownloadClient, self) .__init__(pickle_path)
         self.repo = 'ega'
 
-    def download(self, object_ids, access, tool_path, output, parallel, udt=None, file_from=None, repo=None):
+    def download(self, object_ids, access, tool_path, output, parallel, udt=None, file_from=None, repo=None,
+                 region=None):
 
         key = ''.join(SystemRandom().choice(ascii_uppercase + digits) for _ in range(4))
         label = object_ids[0] + '_download_request'
@@ -69,7 +70,7 @@ class EgaDownloadClient(DownloadClient):
             return rc_decrypt
         return 0
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         base_url = "https://ega.ebi.ac.uk/ega/rest/access/v2/"
         access_file = open(access)
         username = access_file.readline()

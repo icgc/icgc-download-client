@@ -17,9 +17,9 @@
 #
 
 import re
-from ..portal_client import call_api
-from ..download_client import DownloadClient
-from ..errors import ApiError
+from icgcget.clients.portal_client import call_api
+from icgcget.clients.download_client import DownloadClient
+from icgcget.clients.errors import ApiError
 
 
 class GdcDownloadClient(DownloadClient):
@@ -28,7 +28,7 @@ class GdcDownloadClient(DownloadClient):
         super(GdcDownloadClient, self) .__init__(pickle_path)
         self.repo = 'gdc'
 
-    def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
+    def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None, region=None):
         call_args = [tool_path, 'download']
         call_args.extend(uuids)
         call_args.extend(['--dir', output, '-n', processes])
@@ -39,7 +39,7 @@ class GdcDownloadClient(DownloadClient):
         code = self._run_command(call_args, self.download_parser)
         return code
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         base_url = 'https://gdc-api.nci.nih.gov/data/'
         request = base_url + ','.join(uuids)
         header = {'X-auth-Token': access}

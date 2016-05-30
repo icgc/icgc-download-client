@@ -1,18 +1,36 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
+#
+# This program and the accompanying materials are made available under the terms of the GNU Public License v3.0.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+# SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 import logging
-
 import click
 import psutil
 import os
 import shutil
-from command_utils import api_error_catch, filter_manifest_ids, check_access
-from ..utils import calculate_size, convert_size
-from .. import portal_client
-from ..ega.ega_client import EgaDownloadClient
-from ..gdc.gdc_client import GdcDownloadClient
-from ..gnos.gnos_client import GnosDownloadClient
-from ..icgc.storage_client import StorageClient
+from utils import api_error_catch, filter_manifest_ids, check_access
+from icgcget.clients.utils import calculate_size, convert_size
+from icgcget.clients import portal_client
+from icgcget.clients.ega.ega_client import EgaDownloadClient
+from icgcget.clients.gdc.gdc_client import GdcDownloadClient
+from icgcget.clients.gnos.gnos_client import GnosDownloadClient
+from icgcget.clients.icgc.storage_client import StorageClient
+from icgcget.clients.pdc.pdc_client import PdcDownloadClient
 
-REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub']
+REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
 
 
 class DownloadDispatcher:
@@ -21,6 +39,7 @@ class DownloadDispatcher:
         self.gdc_client = GdcDownloadClient(pickle_path)
         self.ega_client = EgaDownloadClient(pickle_path)
         self.gt_client = GnosDownloadClient(pickle_path)
+        self.pdc_client = PdcDownloadClient(pickle_path)
         self.icgc_client = StorageClient(pickle_path)
 
     def download_manifest(self, repos, file_ids, manifest, output, yes_to_all, api_url):
@@ -68,7 +87,8 @@ class DownloadDispatcher:
                  cghub_access, cghub_path, cghub_transport_parallel,
                  ega_access, ega_path, ega_transport_parallel, ega_udt,
                  gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
-                 icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel):
+                 icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
+                 pdc_access, pdc_path, pdc_transport_parallel):
 
         if 'cghub' in object_ids and object_ids['cghub']:
             check_access(self, cghub_access, 'cghub')
@@ -109,6 +129,14 @@ class DownloadDispatcher:
                                                     file_from=icgc_transport_file_from, repo='collab')
             object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
+            self.move_files(staging, output)
+
+        if 'gdc' in object_ids and object_ids['gdc']:
+            check_access(self, pdc_access, 'pdc')
+            uuids = self.get_uuids(object_ids['pdc'])
+            self.pdc_client.session = object_ids
+            return_code = self.pdc_client.download(uuids, pdc_access, pdc_path, staging, pdc_transport_parallel )
+            self.check_code('Gdc', return_code)
             self.move_files(staging, output)
 
         if 'gdc' in object_ids and object_ids['gdc']:

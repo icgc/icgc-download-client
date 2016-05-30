@@ -18,8 +18,8 @@
 
 import os
 import re
-from ..portal_client import call_api
-from ..download_client import DownloadClient
+from icgcget.clients.portal_client import call_api
+from icgcget.clients.download_client import DownloadClient
 
 
 class StorageClient(DownloadClient):
@@ -27,7 +27,7 @@ class StorageClient(DownloadClient):
     def __init__(self, pickle_path=None):
         super(StorageClient, self) .__init__(pickle_path)
 
-    def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
+    def download(self, uuids, access, tool_path, output,  processes, udt=None, file_from=None, repo=None, region=None):
         os.environ['ACCESSTOKEN'] = access
         os.environ['TRANSPORT_PARALLEL'] = processes
         if file_from is not None:
@@ -42,7 +42,7 @@ class StorageClient(DownloadClient):
         code = self._run_command(call_args, parser=self.download_parser)
         return code
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         request = api_url + 'settings/tokens/' + access
         resp = call_api(request, api_url)
         match = repo + ".download"

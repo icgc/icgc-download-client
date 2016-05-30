@@ -18,11 +18,12 @@ class DownloadClient(object):
         self.repo = ''
 
     @abc.abstractmethod
-    def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None):
+    def download(self, manifest, access, tool_path, output,  processes, udt=None, file_from=None, repo=None,
+                 region=None):
         return
 
     @abc.abstractmethod
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         return
 
     @abc.abstractmethod

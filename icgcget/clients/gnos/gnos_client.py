@@ -17,8 +17,8 @@
 #
 
 import re
-from ..errors import SubprocessError
-from ..download_client import DownloadClient
+from icgcget.clients.errors import SubprocessError
+from icgcget.clients.download_client import DownloadClient
 
 
 class GnosDownloadClient(DownloadClient):
@@ -27,14 +27,14 @@ class GnosDownloadClient(DownloadClient):
         super(GnosDownloadClient, self) .__init__(pickle_path)
         self.repo = 'cghub'
 
-    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None):
+    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, region=None):
         call_args = [tool_path, '-vv', '-c', access, '-d']
         call_args.extend(uuids)
         call_args.extend(['-p', output])
         code = self._run_command(call_args, self.download_parser)
         return code
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, region=None):
         call_args = [path, '-vv', '-c', access, '-d']
         call_args.extend(uuids)
         call_args.extend(['-p', output])
