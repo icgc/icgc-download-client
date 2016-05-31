@@ -26,10 +26,10 @@ import icgcget.clients.gnos.gnos_client as gnos_client
 
 
 def versions_command(cghub_path, ega_access, ega_path, gdc_path, icgc_path, pdc_path, version_num):
-    logger = logging.getLogger()
+    logger = logging.getLogger("__log__")
     pdc_client.PdcDownloadClient().print_version(pdc_path)
     gdc_client.GdcDownloadClient().print_version(gdc_path)
     ega_client.EgaDownloadClient().print_version(ega_path, ega_access)
     gnos_client.GnosDownloadClient().print_version(cghub_path)
     storage_client.StorageClient().print_version(icgc_path)
-    logger.info("ICGC-Get Version: {}".format(version_num))
+    logger.warning("ICGC-Get Version: {}".format(version_num))

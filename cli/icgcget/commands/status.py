@@ -48,6 +48,7 @@ class StatusScreenDispatcher:
         repo_list = []
         gdc_ids = []
         cghub_ids = []
+        pdc_paths = []
         repo_sizes = {}
         repo_counts = {}
         repo_donors = {}
@@ -96,6 +97,8 @@ class StatusScreenDispatcher:
                 gdc_ids.append(entity["dataBundle"]["dataBundleId"])
             if repository == "cghub":
                 cghub_ids.append(entity["dataBundle"]["dataBundleId"])
+            if repository == "pdc":
+                pdc_paths.append('s3' + copy['repoBaseUrl'][5:] + copy["repoDataPath"])
             for donor_info in entity['donors']:
                 repo_donors[repository]["total"] = donor_addition(repo_donors[repository]["total"], donor_info)
                 repo_donors[repository][data_type] = donor_addition(repo_donors[repository][data_type], donor_info)
@@ -123,10 +126,10 @@ class StatusScreenDispatcher:
         if not no_files:
             self.logger.info(tabulate(file_table, headers="firstrow", tablefmt="fancy_grid", numalign="right"))
         self.logger.info(tabulate(summary_table, headers="firstrow", tablefmt="fancy_grid", numalign="right"))
-        return gdc_ids, cghub_ids, repo_list
+        return gdc_ids, cghub_ids, pdc_paths, repo_list
 
     def access_checks(self, repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access,
-                      pdc_region, pdc_path, output, api_url, cghub_ids=None, gdc_ids=None, pdc_ids=None):
+                      pdc_path, pdc_region, output, api_url, cghub_ids=None, gdc_ids=None, pdc_ids=None):
         if "collaboratory" in repo_list:
             check_access(self, icgc_access, "icgc")
             self.access_response(self.icgc_client.access_check(icgc_access, repo="collab", api_url=api_url),
@@ -142,6 +145,7 @@ class StatusScreenDispatcher:
             check_access(self, gdc_access, 'gdc')
             gdc_result = api_error_catch(self, self.gdc_client.access_check, gdc_access, gdc_ids)
             self.access_response(gdc_result, "gdc files specified.")
+
         if 'cghub' in repo_list and cghub_ids:  # as before, can't check cghub permissions without files
             check_access(self, cghub_access, 'cghub')
             try:

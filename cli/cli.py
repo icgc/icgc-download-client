@@ -140,9 +140,9 @@ def status(ctx, repos, file_ids, manifest, output,
            no_files):
     api_url = get_api_url(ctx.default_map)
     dispatch = StatusScreenDispatcher()
-    gdc_ids, gnos_ids, repo_list = dispatch.status_tables(repos, file_ids, manifest, api_url, no_files)
+    gdc_ids, gnos_ids, pdc_ids, repo_list = dispatch.status_tables(repos, file_ids, manifest, api_url, no_files)
     dispatch.access_checks(repo_list, cghub_access, cghub_path, ega_access, gdc_access, icgc_access, pdc_access,
-                           pdc_path, pdc_region, output, api_url)
+                           pdc_path, pdc_region, output, api_url, gnos_ids, gdc_ids, pdc_ids)
 
 
 @cli.command()
