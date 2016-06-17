@@ -43,8 +43,7 @@ class PdcDownloadClient(DownloadClient):
             self.session_update(data_path, 'pdc')
         return code
 
-    def access_check(self, key, data_paths=None, path=None, repo=None, output=None, api_url=None, verify=None,
-                     secret_key=None):
+    def access_check(self, key, data_paths=None, path=None, repo=None, output=None, api_url=None, secret_key=None):
         os.environ['AWS_ACCESS_KEY_ID'] = key
         os.environ['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:

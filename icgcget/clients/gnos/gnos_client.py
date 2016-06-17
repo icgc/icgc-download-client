@@ -38,8 +38,7 @@ class GnosDownloadClient(DownloadClient):
         code = self._run_command(call_args, self.download_parser)
         return code
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, verify=None,
-                     password=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
         access_file = tempfile.NamedTemporaryFile()
         access_file.file.write(access)
         call_args = [path, '-vv', '-c', access_file.name, '-d']

@@ -56,7 +56,7 @@ def logger_setup(logfile):
 def get_api_url(context_map):
     if os.getenv("ICGCGET_API_URL"):
         api_url = os.getenv("ICGCGET_API_URL")
-    elif context_map:
+    elif context_map and 'portal_url' in context_map:
         api_url = context_map["portal_url"] + 'api/v1/'
     else:
         api_url = "https://www.icgc.com/api/v1"
@@ -202,7 +202,7 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, override,
 @click.pass_context
 def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
           icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
-    if not repos:
+    if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Please specify repositories to check access to")
     api_url = get_api_url(ctx.default_map)
     dispatch = AccessCheckDispatcher()
@@ -212,7 +212,8 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
 
 @cli.command()
 @click.option('--config-destination', '-d', type=click.Path(), default=DEFAULT_CONFIG_FILE)
-def configure(config_destination):
+@click.option('--no-paths', is_flag=True, default=False, help="Do not write path values")
+def configure(config_destination, no_paths):
     dispatch = ConfigureDispatcher(config_destination, DEFAULT_CONFIG_FILE)
     dispatch.configure(config_destination)
 
