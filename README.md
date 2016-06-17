@@ -90,6 +90,15 @@ All clients require an absolute path to your local client installation under rep
 data streams to use when downloading under `repo.transport.parallel` or `REPO_TRANSPORT_PARALLEL`
 Most clients can be made to download using the UDT protocol by using the `repo.udt` config option.
 
+To more easily create a properly formatted configuration file, you can use the `configure` command.  This will 
+start a series of prompts for you to enter application paths, access credentials, output directories and logfile locations.
+Any of these prompts can be  bypassed by immediatly pressing the enter key if the parameter is not relevant for your
+planned use of ICGC-get.  By default, `configure` will write to the default config file, but the destination can be overwritten with 
+the `-d` tag.  Should there be an extant configuration file at the target destination, existing configuration values can be kept
+by immediatly pressing enter in response to the prompt.
+
+
+
 ## Access
 
 ### Collaboratory and AWS

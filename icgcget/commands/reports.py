@@ -90,7 +90,7 @@ class StatusScreenDispatcher(object):
             size = entity["fileCopies"][0]["fileSize"]
             repository, copy = match_repositories(self, repos, entity)
             data_type = entity["dataCategorization"]["dataType"]
-            if copy["fileName"] in os.listdir(output):
+            if output and copy["fileName"] in os.listdir(output):
                 state = "Yes"
             else:
                 state = "No"

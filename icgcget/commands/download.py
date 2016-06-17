@@ -64,7 +64,7 @@ class DownloadDispatcher(object):
             file_copies = entity['fileCopies']
             for copy in file_copies:
                 if copy['repoCode'] == repo:
-                    if copy["fileName"] in os.listdir(output):
+                    if output and copy["fileName"] in os.listdir(output):
                         object_ids[repo].pop(entity['id'])
                         self.logger.warning("File %s found in download directory, skipping", entity['id'])
                         break
@@ -73,7 +73,7 @@ class DownloadDispatcher(object):
                         object_ids[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]
                     if repo == 'pdc':
                         object_ids[repo][entity['id']]['fileUrl'] = 's3://' + copy['repoDataPath']
-                        if copy['repoDataPath'].split('/')[1] in os.listdir(output):
+                        if output and copy['repoDataPath'].split('/')[1] in os.listdir(output):
                             object_ids[repo].pop(entity['id'])
                             self.logger.warning("File %s found in download directory, skipping", entity['id'])
                             break
@@ -156,10 +156,11 @@ class DownloadDispatcher(object):
             raise click.ClickException("Please check client output for error messages")
 
     def size_check(self, size, output):
-        free = psutil.disk_usage(output)[2]
-        if free <= size:
-            self.logger.error("Not enough space detected for download of %s. %s of space in %s",
-                              ''.join(convert_size(size)), ''.join(convert_size(free)), output)
+        if output:
+            free = psutil.disk_usage(output)[2]
+            if free <= size:
+                self.logger.error("Not enough space detected for download of %s. %s of space in %s",
+                                  ''.join(convert_size(size)), ''.join(convert_size(free)), output)
 
     @staticmethod
     def get_uuids(object_ids):

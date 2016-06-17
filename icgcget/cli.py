@@ -59,7 +59,7 @@ def get_api_url(context_map):
     elif context_map and 'portal_url' in context_map:
         api_url = context_map["portal_url"] + 'api/v1/'
     else:
-        api_url = "https://www.icgc.com/api/v1"
+        api_url = "https://staging.dcc.icgc.org/api/v1/"
     return api_url
 
 
@@ -118,6 +118,8 @@ def download(ctx, ids, repos, manifest, output,
              gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
              pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
+    if not repos or repos.count(None) == len(repos):
+        raise click.BadOptionUsage("Must include prioritized repositories")
     api_url = get_api_url(ctx.default_map)
     staging = output + '/.staging'
     if not os.path.exists(staging):
@@ -160,13 +162,15 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, override,
     if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Must include prioritized repositories")
     api_url = get_api_url(ctx.default_map)
-    pickle_path = output + '/.staging/state.pk'
+    pickle_path = None
+    if output:
+        pickle_path = output + '/.staging/state.pk'
     session_info = None
     download_dispatch = DownloadDispatcher(pickle_path)
     if ids:
         validate_ids(ids, manifest)
         session_info = download_dispatch.download_manifest(repos, ids, manifest, output, api_url, no_ssl_verify)
-    if os.path.isfile(pickle_path):
+    if pickle_path and os.path.isfile(pickle_path):
         old_session_info = pickle.load(open(pickle_path, 'r+'))
         if session_info:
             session_info['object_ids'] = compare_ids(session_info['object_ids'], old_session_info['object_ids'],
