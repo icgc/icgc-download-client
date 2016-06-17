@@ -20,22 +20,22 @@ class ConfigureDispatcher(object):
         output = self.prompt('output')
         logfile = self.prompt('logfile')
         icgc_path = self.prompt('path', 'icgc')
-        icgc_access = self.prompt('access', 'icgc', True)
+        icgc_access = self.prompt('token', 'icgc', True)
         cghub_path = self.prompt('path', 'cghub')
-        cghub_access = self.prompt('access', 'cghub', True)
+        cghub_access = self.prompt('key', 'cghub', True)
         ega_path = self.prompt('path', 'ega')
         ega_username = self.prompt('username', 'ega')
         ega_password = self.prompt('password', 'ega', True)
         gdc_path = self.prompt('path', 'gdc')
-        gdc_access = self.prompt('access', 'gdc', True)
+        gdc_access = self.prompt('token', 'gdc', True)
         pdc_path = self.prompt('path', 'pdc')
         pdc_key = self.prompt('key', 'pdc', True)
         pdc_secret_key = self.prompt('secret_key', 'pdc', True)
         conf_yaml = {'output': output, 'logfile': logfile,
-                     'icgc': {'path': icgc_path, 'access': icgc_access},
-                     'cghub': {'path': cghub_path, 'access': cghub_access},
+                     'icgc': {'path': icgc_path, 'token': icgc_access},
+                     'cghub': {'path': cghub_path, 'key': cghub_access},
                      'ega': {'path': ega_path, 'username': ega_username, 'password': ega_password},
-                    'gdc': {'path': gdc_path, 'access': gdc_access},
+                    'gdc': {'path': gdc_path, 'token': gdc_access},
                     'pdc': {'path': pdc_path, 'key': pdc_key, 'secret': pdc_secret_key}}
 
         yaml.dump(conf_yaml, config_file, encoding=None, default_flow_style=False)

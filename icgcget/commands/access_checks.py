@@ -36,8 +36,8 @@ class AccessCheckDispatcher(object):
         self.gdc_ids = []
         self.pdc_urls = []
 
-    def access_checks(self, repo_list, file_ids, manifest, cghub_access, cghub_path, ega_username, ega_password,
-                      gdc_access, icgc_access, pdc_key, pdc_path, pdc_secret_key, output, api_url, verify):
+    def access_checks(self, repo_list, file_ids, manifest, cghub_key, cghub_path, ega_username, ega_password,
+                      gdc_token, icgc_token, pdc_key, pdc_path, pdc_secret_key, output, api_url, verify):
 
         gdc_client = GdcDownloadClient(verify=verify)
         ega_client = EgaDownloadClient(verify=verify)
@@ -49,12 +49,12 @@ class AccessCheckDispatcher(object):
             self.entity_search(manifest, file_ids, api_url, repo_list, verify)
 
         if "collaboratory" in repo_list:
-            check_access(self, icgc_access, "icgc")
-            self.access_response(icgc_client.access_check(icgc_access, repo="collab", api_url=api_url),
+            check_access(self, icgc_token, "icgc")
+            self.access_response(icgc_client.access_check(icgc_token, repo="collab", api_url=api_url),
                                  "Collaboratory.")
         if "aws-virginia" in repo_list:
-            check_access(self, icgc_access, "icgc")
-            self.access_response(icgc_client.access_check(icgc_access, repo="aws", api_url=api_url),
+            check_access(self, icgc_token, "icgc")
+            self.access_response(icgc_client.access_check(icgc_token, repo="aws", api_url=api_url),
                                  "Amazon Web Server.")
         if 'ega' in repo_list:
             check_access(self, ega_username, 'ega', password=ega_password)
@@ -62,15 +62,15 @@ class AccessCheckDispatcher(object):
 
         if 'gdc' in repo_list:
             if self.id_check('gdc', self.gdc_ids):
-                check_access(self, gdc_access, 'gdc')
-                gdc_result = api_error_catch(self, gdc_client.access_check, gdc_access, self.gdc_ids)
+                check_access(self, gdc_token, 'gdc')
+                gdc_result = api_error_catch(self, gdc_client.access_check, gdc_token, self.gdc_ids)
                 self.access_response(gdc_result, "GDC files specified.")
 
         if 'cghub' in repo_list:
             if self.id_check('cghub', self.cghub_ids):
-                check_access(self, cghub_access, 'cghub', cghub_path)
+                check_access(self, cghub_key, 'cghub', cghub_path)
                 try:
-                    self.access_response(gt_client.access_check(cghub_access, self.cghub_ids, cghub_path,
+                    self.access_response(gt_client.access_check(cghub_key, self.cghub_ids, cghub_path,
                                                                 output=output), "CGHub files.")
                 except SubprocessError as ex:
                     self.logger.error(ex.message)

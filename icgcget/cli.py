@@ -87,7 +87,7 @@ def cli(ctx, config, logfile):
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               required=True, envvar='ICGCGET_OUTPUT')
-@click.option('--cghub-access', type=click.STRING, envvar='ICGCGET_CGHUB_ACCESS')
+@click.option('--cghub-key', type=click.STRING, envvar='ICGCGET_CGHUB_KEY')
 @click.option('--cghub-path', type=click.STRING, envvar='ICGCGET_CGHUB_PATH')
 @click.option('--cghub-transport-parallel', type=click.STRING, default='8', envvar='ICGCGET_CGHUB_TRANSPORT_PARALLEL')
 @click.option('--ega-username', type=click.STRING, envvar='ICGCGET_EGA_USERNAME')
@@ -95,11 +95,11 @@ def cli(ctx, config, logfile):
 @click.option('--ega-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True), envvar='ICGCGET_EGA_PATH')
 @click.option('--ega-transport-parallel', type=click.STRING, default='1', envvar='ICGCGET_EGA_TRANSPORT_PARALLEL')
 @click.option('--ega-udt', type=click.BOOL, default=False, envvar='ICGCGET_EGA_UDT')
-@click.option('--gdc-access', type=click.STRING, envvar='ICGCGET_GDC_ACCESS')
+@click.option('--gdc-token', type=click.STRING, envvar='ICGCGET_GDC_TOKEN')
 @click.option('--gdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True), envvar='ICGCGET_GDC_PATH')
 @click.option('--gdc-transport-parallel', type=click.STRING, default='8')
 @click.option('--gdc-udt', type=click.BOOL, default=False, envvar='ICGCGET_GDC_UDT')
-@click.option('--icgc-access', type=click.STRING, envvar='ICGCGET_ICGC_ACCESS')
+@click.option('--icgc-token', type=click.STRING, envvar='ICGCGET_ICGC_TOKEN')
 @click.option('--icgc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True),
               envvar='ICGCGET_CGHUB_ACCESS')
 @click.option('--icgc-transport-file-from', type=click.STRING, default='remote',
@@ -113,10 +113,10 @@ def cli(ctx, config, logfile):
 @click.option('--no-ssl-verify', is_flag=True, default=True, help="Do not verify ssl certificates")
 @click.pass_context
 def download(ctx, ids, repos, manifest, output,
-             cghub_access, cghub_path, cghub_transport_parallel,
+             cghub_key, cghub_path, cghub_transport_parallel,
              ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
-             gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
-             icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
+             gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
+             icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
              pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
     api_url = get_api_url(ctx.default_map)
     staging = output + '/.staging'
@@ -137,10 +137,10 @@ def download(ctx, ids, repos, manifest, output,
         session_info['object_ids'] = compare_ids(session_info['object_ids'], old_session_info['object_ids'], override)
     pickle.dump(session_info, open(pickle_path, 'w', 0777), pickle.HIGHEST_PROTOCOL)
     dispatch.download(session_info, staging, output,
-                      cghub_access, cghub_path, cghub_transport_parallel,
+                      cghub_key, cghub_path, cghub_transport_parallel,
                       ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
-                      gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
-                      icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
+                      gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
+                      icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
                       pdc_key, pdc_secret, pdc_path, pdc_transport_parallel)
     os.remove(pickle_path)
 
@@ -188,26 +188,26 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, override,
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               envvar='ICGCGET_OUTPUT')
-@click.option('--cghub-access', type=click.STRING, envvar='ICGCGET_CGHUB_ACCESS')
+@click.option('--cghub-key', type=click.STRING, envvar='ICGCGET_CGHUB_KEY')
 @click.option('--cghub-path', type=click.STRING, envvar='ICGCGET_CGHUB_PATH')
 @click.option('--ega-username', type=click.STRING, envvar='ICGCGET_EGA_USERNAME')
 @click.option('--ega-password', type=click.STRING, envvar='ICGCGET_EGA_PASSWORD')
-@click.option('--gdc-access', type=click.STRING, envvar='ICGCGET_GDC_ACCESS')
-@click.option('--icgc-access', type=click.STRING, envvar='ICGCGET_ICGC_ACCESS')
+@click.option('--gdc-token', type=click.STRING, envvar='ICGCGET_GDC_TOKEN')
+@click.option('--icgc-token', type=click.STRING, envvar='ICGCGET_ICGC_TOKEN')
 @click.option('--pdc-key', type=click.STRING, envvar='ICGCGET_PDC_KEY')
 @click.option('--pdc-secret', type=click.STRING, envvar='ICGCGET_PDC_SECRET')
 @click.option('--pdc-path', type=click.Path(exists=True, dir_okay=False, resolve_path=True),
               envvar='ICGCGET_PDC_ACCESS')
 @click.option('--no-ssl-verify', is_flag=True, default=True, help="Do not verify ssl certificates")
 @click.pass_context
-def check(ctx, repos, ids, manifest, output, cghub_access, cghub_path, ega_username, ega_password, gdc_access,
-          icgc_access, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
+def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
+          icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
     if not repos:
         raise click.BadOptionUsage("Please specify repositories to check access to")
     api_url = get_api_url(ctx.default_map)
     dispatch = AccessCheckDispatcher()
-    dispatch.access_checks(repos, ids, manifest, cghub_access, cghub_path, ega_username, ega_password, gdc_access,
-                           icgc_access, pdc_key, pdc_secret, pdc_path, output, api_url, no_ssl_verify)
+    dispatch.access_checks(repos, ids, manifest, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
+                           icgc_token, pdc_key, pdc_secret, pdc_path, output, api_url, no_ssl_verify)
 
 
 @cli.command()

@@ -35,7 +35,7 @@ portal:
 
 # IGCC Storage
 icgc:
-  access:
+  token:
   path: /icgc/icgc-storage-client/bin/icgc-storage-client
   transport:
     file.from: remote
@@ -44,7 +44,7 @@ icgc:
 
 # GDC
 gdc:
-  access:
+  token:
   path: /icgc/gdc-data-transfer-tool/gdc-client
   transport:
     parallel: '6'
@@ -70,7 +70,7 @@ pdc:
 
 # CGHub
 cghub:
-  access:
+  key:
   path: /icgc/genetorrent/bin/gtdownload
   transport:
     parallel: '8'

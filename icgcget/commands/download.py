@@ -82,26 +82,26 @@ class DownloadDispatcher(object):
         return session_info
 
     def download(self, session, staging, output,
-                 cghub_access, cghub_path, cghub_transport_parallel,
+                 cghub_key, cghub_path, cghub_transport_parallel,
                  ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
-                 gdc_access, gdc_path, gdc_transport_parallel, gdc_udt,
-                 icgc_access, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
+                 gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
+                 icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
                  pdc_key, pdc_secret_key, pdc_path, pdc_transport_parallel):
         object_ids = session['object_ids']
         if 'cghub' in object_ids and object_ids['cghub']:
-            check_access(self, cghub_access, 'cghub', cghub_path)
+            check_access(self, cghub_key, 'cghub', cghub_path)
             self.gt_client.session = session
             uuids = self.get_uuids(object_ids['cghub'])
-            return_code = self.gt_client.download(uuids, cghub_access, cghub_path, staging, cghub_transport_parallel)
+            return_code = self.gt_client.download(uuids, cghub_key, cghub_path, staging, cghub_transport_parallel)
             object_ids = self.icgc_client.session
             self.check_code('Cghub', return_code)
             self.move_files(staging, output)
 
         if 'aws-virginia' in object_ids and object_ids['aws-virginia']:
-            check_access(self, icgc_access, 'icgc', icgc_path)
+            check_access(self, icgc_token, 'icgc', icgc_path)
             self.icgc_client.session = session
             uuids = self.get_uuids(object_ids['aws-virginia'])
-            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, staging, icgc_transport_parallel,
+            return_code = self.icgc_client.download(uuids, icgc_token, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='aws')
             object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
@@ -121,10 +121,10 @@ class DownloadDispatcher(object):
             self.move_files(staging, output)
 
         if 'collaboratory' in object_ids and object_ids['collaboratory']:
-            check_access(self, icgc_access, 'icgc', icgc_path)
+            check_access(self, icgc_token, 'icgc', icgc_path)
             self.icgc_client.session = session
             uuids = self.get_uuids(object_ids['collaboratory'])
-            return_code = self.icgc_client.download(uuids, icgc_access, icgc_path, staging, icgc_transport_parallel,
+            return_code = self.icgc_client.download(uuids, icgc_token, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='collab')
             object_ids = self.icgc_client.session
             self.check_code('Icgc', return_code)
@@ -142,10 +142,10 @@ class DownloadDispatcher(object):
             self.move_files(staging, output)
 
         if 'gdc' in object_ids and object_ids['gdc']:
-            check_access(self, gdc_access, 'gdc', gdc_path)
+            check_access(self, gdc_token, 'gdc', gdc_path)
             uuids = self.get_uuids(object_ids['gdc'])
             self.gdc_client.session = session
-            return_code = self.gdc_client.download(uuids, gdc_access, gdc_path, staging, gdc_transport_parallel,
+            return_code = self.gdc_client.download(uuids, gdc_token, gdc_path, staging, gdc_transport_parallel,
                                                    gdc_udt)
             self.check_code('Gdc', return_code)
         self.move_files(staging, output)
