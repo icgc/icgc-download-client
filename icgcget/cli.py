@@ -157,7 +157,7 @@ def download(ctx, ids, repos, manifest, output,
 @click.option('--no-ssl-verify', is_flag=True, default=True, help="Do not verify ssl certificates")
 @click.pass_context
 def report(ctx, repos, ids, manifest, output, table_format, data_type, override, no_ssl_verify):
-    if not repos:
+    if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Must include prioritized repositories")
     api_url = get_api_url(ctx.default_map)
     pickle_path = output + '/.staging/state.pk'
