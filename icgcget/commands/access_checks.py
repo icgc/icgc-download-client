@@ -37,7 +37,7 @@ class AccessCheckDispatcher(object):
         self.pdc_urls = []
 
     def access_checks(self, repo_list, file_ids, manifest, cghub_key, cghub_path, ega_username, ega_password,
-                      gdc_token, icgc_token, pdc_key, pdc_path, pdc_secret_key, output, api_url, verify):
+                      gdc_token, icgc_token, pdc_key, pdc_secret_key, pdc_path, output, api_url, verify):
 
         gdc_client = GdcDownloadClient(verify=verify)
         ega_client = EgaDownloadClient(verify=verify)

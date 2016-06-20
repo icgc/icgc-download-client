@@ -30,8 +30,9 @@ class StorageClient(DownloadClient):
         self.verify = verify
 
     def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, password=None):
-        os.environ['ACCESSTOKEN'] = access
-        os.environ['TRANSPORT_PARALLEL'] = processes
+        env_dict = dict(os.environ)
+        env_dict['ACCESSTOKEN'] = access
+        env_dict['TRANSPORT_PARALLEL'] = processes
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
         call_args = [tool_path, '--profile', repo, 'download', '--object-id']
@@ -41,7 +42,7 @@ class StorageClient(DownloadClient):
             self.repo = 'collaboratory'
         elif repo == 'aws':
             self.repo = 'aws-virginia'
-        code = self._run_command(call_args, parser=self.download_parser)
+        code = self._run_command(call_args, parser=self.download_parser, env=env_dict)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):

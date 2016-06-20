@@ -28,14 +28,9 @@ def call_api(request, headers=None, head=False, verify=True):
             resp = requests.head(request, headers=headers, verify=verify)
         else:
             resp = requests.get(request, headers=headers, verify=verify)
-    except requests.exceptions.ConnectionError as ex:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+            requests.exceptions.RequestException) as ex:
         logger.debug(ex.message)
-        raise ApiError(request, ex.message.message)
-    except requests.exceptions.Timeout as ex:
-        logger.debug(ex.message)
-        raise ApiError(request, ex.message.message)
-    except requests.exceptions.RequestException as ex:
-        logger.error(ex.message)
         raise ApiError(request, ex.message.message)
     if resp.status_code != 200:
         raise ApiError(request, "API request failed due to {} error.".format(resp.reason),

@@ -59,6 +59,7 @@ class DownloadDispatcher(object):
                     repo = repo_id
                     break
             else:
+                self.logger.warning("File %s not found on any of the specified repositories", entity["id"])
                 continue
 
             file_copies = entity['fileCopies']
@@ -181,8 +182,23 @@ class DownloadDispatcher(object):
 
     def move_files(self, staging, output):
         for staged_file in os.listdir(staging):
-            if staged_file != "state.pk":
+            if staged_file != "state.json":
                 try:
                     shutil.move(staging + '/' + staged_file, output)
                 except shutil.Error:
                     self.logger.warning('File %s already present in download directory', staged_file)
+
+    def filter_manifest_ids(self, manifest_json, repos):
+        fi_ids = []  # Function to return a list of unique  file ids from a manifest.  Throws error if not unique
+        for repo_info in manifest_json["entries"]:
+            if repo_info["repo"] in repos:
+                for file_info in repo_info["files"]:
+                    if file_info["id"] in fi_ids:
+                        self.logger.error("Supplied manifest has repeated file identifiers.  Please specify a " +
+                                          "list of repositories to prioritize")
+                        raise click.Abort
+                    else:
+                        fi_ids.append(file_info["id"])
+        if not fi_ids:
+            self.logger.warning("Files on manifest are not found on specified repositories")
+            raise click.Abort

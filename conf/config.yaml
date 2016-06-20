@@ -64,7 +64,6 @@ pdc:
   key:
   secret:
   path: /usr/local/bin/aws
-  region: us-west-2
   transport:
     parallel: '1'
 

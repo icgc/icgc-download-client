@@ -18,18 +18,12 @@ ENV GT_VERSION_LONG 207
 RUN \
   apt-get update && \
   apt-get -y upgrade && \
-  apt-get install -y libfuse-dev fuse curl wget software-properties-common && \
+  apt-get install -y libfuse-dev fuse software-properties-common && \
+  apt-get install -y python-pip python-dev libffi-dev && \
   apt-get install libicu55 && \
 # Required for Genetorrent and Icgc
-  apt-get install unzip
-# Required to download EGA
-
-#
-# Install OpenSSL for Genetorrent
-#
-
-
-RUN apt-get install -y openssl libssl-dev
+  apt-get install -y  openssl libssl-dev
+# Required to downloade Genetorrent
 
 #
 # Install Oracle JDK 8 for icgc-storage client 
@@ -44,73 +38,67 @@ RUN apt-get install -y \
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 #
-# Install python 2.7 and dependancies for Genetorrent and icgc-get.
+# Install ICGC-get and make root directory, install aws-cli, cleanup pip
 #
-
-RUN apt-get install -y python-pip python-dev libffi-dev && \
-    apt-get upgrade -y && \
-    pip install -U pip setuptools
-
-COPY . /icgc/icgcget/
-COPY /conf/ /icgc/conf
-
-RUN cd /icgc/icgcget && \
-    pip install -r requirements.txt && \
-    python setup.py install && \
-    mkdir /root/.icgcget
 
 #
 # Download and install latest EGA download client version
 #
-
+ENV PATH=$PATH:/icgc/genetorrent/bin
 RUN mkdir -p /icgc/ega-download-demo && \
+    apt-get install -y unzip curl wget && \
     cd /icgc/ega-download-demo && \
     wget -qO- https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/files/documents/EgaDemoClient_$EGA_VERSION.zip -O temp.zip ; \
     unzip temp.zip -d /icgc/ega-download-demo; \
-    rm temp.zip
+    rm temp.zip && \
 
 #
 # Install GeneTorrent and add to PATH
 #
 
-RUN mkdir -p /icgc/genetorrent && \
+    mkdir -p /icgc/genetorrent && \
     cd /icgc/genetorrent && \
     wget -qO- https://cghub.ucsc.edu/software/downloads/GeneTorrent/$GT_VERSION/GeneTorrent-download-$GT_VERSION-$GT_VERSION_LONG-Ubuntu14.04.x86_64.tar.gz | \
-    tar xvz --strip-components 1 
-ENV PATH=$PATH:/icgc/genetorrent/bin
+    tar xvz --strip-components 1 && \
+
 
 # 
 # Install latest version of storage client distribution
 #
 
-RUN mkdir -p /icgc/icgc-storage-client && \
+    mkdir -p /icgc/icgc-storage-client && \
     cd /icgc/icgc-storage-client && \
     wget -qO- https://artifacts.oicr.on.ca/artifactory/dcc-release/org/icgc/dcc/icgc-storage-client/[RELEASE]/icgc-storage-client-[RELEASE]-dist.tar.gz | \
     tar xvz --strip-components 1 && \
-    mkdir -p /icgc/icgc-storage-client/logs
+    mkdir -p /icgc/icgc-storage-client/logs && \
 
 #
 # Install latest version of gdc download tool
 #
 
-RUN mkdir -p /icgc/gdc-data-transfer-tool && \
+    mkdir -p /icgc/gdc-data-transfer-tool && \
     cd /icgc/gdc-data-transfer-tool && \
     wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-client_v1.0.1_Ubuntu14.04_x64_0.zip -O temp.zip ; \
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
     rm temp.zip && \
-    cd /icgc
+    cd /icgc && \
+    apt-get remove -y unzip curl wget && \
+    apt autoremove -y
 
-#
-# Install aws command line tools
-#
-
-RUN mkdir -p /icgc/aws-command-line-client && \
-    cd /icgc/aws-command-line-client && \
-    pip install awscli
 
 #
 # Set working directory for convenience with interactive usage
 #
+
+COPY . /icgc/icgcget/
+
+RUN cd /icgc/icgcget && \
+    apt-get upgrade -y && \
+    pip install -U pip setuptools && \
+    pip install -r requirements.txt && \
+    python setup.py install && \
+    pip install awscli && \
+    pip uninstall -y pip setuptools
 
 WORKDIR /icgc
 
@@ -123,5 +111,6 @@ ENV ICGCGET_GDC_PATH=/icgc/gdc-data-transfer-tool/gdc-client
 ENV ICGCGET_EGA_PATH=/icgc/ega-download-demo/EgaDemoClient.jar
 ENV ICGCGET_CGHUB_PATH=/icgc/genetorrent/bin/gtdownload
 ENV ICGCGET_PDC_PATH=/usr/local/bin/aws
+ENV ICGCGET_CONFIG=/icgc/mnt/config.yaml
 
 ENTRYPOINT ["icgc-get"]

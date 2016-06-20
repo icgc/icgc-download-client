@@ -124,7 +124,7 @@ def filter_manifest_ids(self, manifest_json, repos):
                 else:
                     fi_ids.append(file_info["id"])
     if not fi_ids:
-        self.logger.warning("Files on manifest are not found on specified repositories")
+        self.logger.warning("No files found on specified repositories")
         raise click.Abort
     return fi_ids
 
@@ -173,7 +173,7 @@ def validate_ids(ids, manifest):
             if not re.findall(r'FI\d*', fi_id):
                 if re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', fi_id):
                     raise click.BadArgumentUsage(message="Bad FI ID: passed argument {}".format(fi_id) +
-                                                 "is in uuid format.  If you intended to use a manifest," +
+                                                 "is in UUID format.  If you intended to use a manifest," +
                                                  "add the -m tag.")
                 raise click.BadArgumentUsage(message="Bad FI ID: passed argument {}".format(fi_id) +
                                              "isn't in FI00000 format")

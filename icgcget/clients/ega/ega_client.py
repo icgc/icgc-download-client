@@ -91,6 +91,7 @@ class EgaDownloadClient(DownloadClient):
         return False
 
     def print_version(self, path):
+        # Tool automatically shows version on invocation with demo credentials
         self._run_command(['java', '-jar', path, '-p', 'demo@test.org', '123pass'], self.version_parser)
 
     def version_parser(self, response):

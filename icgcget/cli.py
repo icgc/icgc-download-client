@@ -18,7 +18,7 @@
 
 import logging
 import os
-import pickle
+import json
 import click
 from commands.versions import versions_command
 from commands.reports import StatusScreenDispatcher
@@ -27,10 +27,10 @@ from commands.access_checks import AccessCheckDispatcher
 from commands.utils import compare_ids, config_parse, validate_ids
 from commands.configure import ConfigureDispatcher
 
-DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgcget', force_posix=True), 'config.yaml')
+DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
 VERSION = '0.5'
-
+API_URL = "https://staging.dcc.icgc.org/api/v1/"
 
 def logger_setup(logfile):
     logger = logging.getLogger('__log__')
@@ -51,16 +51,6 @@ def logger_setup(logfile):
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
     logger.addHandler(stream_handler)
-
-
-def get_api_url(context_map):
-    if os.getenv("ICGCGET_API_URL"):
-        api_url = os.getenv("ICGCGET_API_URL")
-    elif context_map and 'portal_url' in context_map:
-        api_url = context_map["portal_url"] + 'api/v1/'
-    else:
-        api_url = "https://staging.dcc.icgc.org/api/v1/"
-    return api_url
 
 
 @click.group()
@@ -120,31 +110,30 @@ def download(ctx, ids, repos, manifest, output,
              pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
     if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Must include prioritized repositories")
-    api_url = get_api_url(ctx.default_map)
     staging = output + '/.staging'
     if not os.path.exists(staging):
         os.umask(0000)
         os.mkdir(staging, 0777)
-    pickle_path = output + '/.staging/state.pk'
-    dispatch = DownloadDispatcher(pickle_path)
+    json_path = output + '/.staging/state.json'
+    dispatch = DownloadDispatcher(json_path)
     old_session_info = None
-    if os.path.isfile(pickle_path):
-        old_session_info = pickle.load(open(pickle_path, 'r+'))
+    if os.path.isfile(json_path):
+        old_session_info = json.load(open(json_path, 'r+'))
     if ids == 'resume':
         session_info = old_session_info
     else:
         validate_ids(ids, manifest)
-        session_info = dispatch.download_manifest(repos, ids, manifest, output, api_url, no_ssl_verify)
+        session_info = dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
     if old_session_info:
         session_info['object_ids'] = compare_ids(session_info['object_ids'], old_session_info['object_ids'], override)
-    pickle.dump(session_info, open(pickle_path, 'w', 0777), pickle.HIGHEST_PROTOCOL)
+    json.dump(session_info, open(json_path, 'w', 0777))
     dispatch.download(session_info, staging, output,
                       cghub_key, cghub_path, cghub_transport_parallel,
                       ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
                       gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
                       icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
                       pdc_key, pdc_secret, pdc_path, pdc_transport_parallel)
-    os.remove(pickle_path)
+    os.remove(json_path)
 
 
 @cli.command()
@@ -161,17 +150,16 @@ def download(ctx, ids, repos, manifest, output,
 def report(ctx, repos, ids, manifest, output, table_format, data_type, override, no_ssl_verify):
     if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Must include prioritized repositories")
-    api_url = get_api_url(ctx.default_map)
-    pickle_path = None
+    json_path = None
     if output:
-        pickle_path = output + '/.staging/state.pk'
+        json_path = output + '/.staging/state.json'
     session_info = None
-    download_dispatch = DownloadDispatcher(pickle_path)
+    download_dispatch = DownloadDispatcher(json_path)
     if ids:
         validate_ids(ids, manifest)
-        session_info = download_dispatch.download_manifest(repos, ids, manifest, output, api_url, no_ssl_verify)
-    if pickle_path and os.path.isfile(pickle_path):
-        old_session_info = pickle.load(open(pickle_path, 'r+'))
+        session_info = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
+    if json_path and os.path.isfile(json_path):
+        old_session_info = json.load(open(json_path, 'r+'))
         if session_info:
             session_info['object_ids'] = compare_ids(session_info['object_ids'], old_session_info['object_ids'],
                                                      override)
@@ -181,9 +169,9 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, override,
     if not session_info:
         raise click.BadArgumentUsage("No id's provided and no session info found, Aborting")
     if data_type == 'file':
-        dispatch.file_table(session_info['object_ids'], output, api_url, table_format, no_ssl_verify)
+        dispatch.file_table(session_info['object_ids'], output, API_URL, table_format, no_ssl_verify)
     elif data_type == 'summary':
-        dispatch.summary_table(session_info['object_ids'], output, api_url, table_format, no_ssl_verify,)
+        dispatch.summary_table(session_info['object_ids'], output, API_URL, table_format, no_ssl_verify,)
 
 
 @cli.command()
@@ -215,7 +203,7 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
 
 
 @cli.command()
-@click.option('--config-destination', '-d', type=click.Path(), default=DEFAULT_CONFIG_FILE)
+@click.option('--config', '-c', type=click.Path(), default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 @click.option('--no-paths', is_flag=True, default=False, help="Do not write path values")
 def configure(config_destination, no_paths):
     dispatch = ConfigureDispatcher(config_destination, DEFAULT_CONFIG_FILE)

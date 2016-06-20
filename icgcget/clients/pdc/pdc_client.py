@@ -28,28 +28,30 @@ class PdcDownloadClient(DownloadClient):
     def __init__(self, pickle_path=None):
         super(PdcDownloadClient, self).__init__(pickle_path)
         self.repo = 'pdc'
+        self.url = '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/'
 
     def download(self, data_paths, key, tool_path, output, processes, udt=None, file_from=None, repo=None,
                  secret_key=None):
         code = 0
-        os.environ['AWS_ACCESS_KEY_ID'] = key
-        os.environ['AWS_SECRET_ACCESS_KEY'] = secret_key
+        env_dict = dict(os.environ)
+        env_dict['AWS_ACCESS_KEY_ID'] = key
+        env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:
             call_args = [tool_path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/', 'cp',
                          data_path, output + '/']
-            code = self._run_command(call_args, self.download_parser)
+            code = self._run_command(call_args, self.download_parser, env_dict)
             if code != 0:
                 return code
             self.session_update(data_path, 'pdc')
         return code
 
     def access_check(self, key, data_paths=None, path=None, repo=None, output=None, api_url=None, secret_key=None):
-        os.environ['AWS_ACCESS_KEY_ID'] = key
-        os.environ['AWS_SECRET_ACCESS_KEY'] = secret_key
+        env_dict = dict(os.environ)
+        env_dict['AWS_ACCESS_KEY_ID'] = key
+        env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:
-            call_args = [path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/', 'cp',
-                         data_path, output + '/', '--dryrun']
-            result = self._run_test_command(call_args, "(403)", "(404)")
+            call_args = [path, 's3', self.url, 'cp', data_path, output + '/', '--dryrun']
+            result = self._run_test_command(call_args, "(403)", "(404)", env_dict, timeout=4)
             if result == 3:
                 return False
             elif result == 0:
