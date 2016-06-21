@@ -17,7 +17,6 @@
 #
 import os
 import collections
-import datetime
 
 
 def build_table(table, repo, sizes, counts, donors, downloads, output):
@@ -37,7 +36,7 @@ def build_table(table, repo, sizes, counts, donors, downloads, output):
     return table
 
 
-def calculate_size(manifest_json):
+def calculate_size(manifest_json, session_info):
     size = 0
     object_ids = {}
     for repo_info in manifest_json["entries"]:
@@ -48,7 +47,7 @@ def calculate_size(manifest_json):
                                                  'filename': 'None', 'index_filename': 'None',
                                                  'fileUrl': 'None', 'size': file_info['size']}
             size += file_info["size"]
-    session_info = {'pid': os.getpid(), 'start_time': datetime.datetime.utcnow().isoformat(), 'object_ids': object_ids}
+    session_info['object_ids'] = object_ids
     return size, session_info
 
 
@@ -95,3 +94,13 @@ def normalize_keys(obj):
         return obj
     else:
         return {k.replace('.', '_'): normalize_keys(v) for k, v in obj.items()}
+
+
+def search_recursive(filename, output):
+    if not output:
+        return False
+    for root, dirs, files in os.walk(output, topdown=False):
+        for name in files:
+            if name == filename:
+                return True
+    return False

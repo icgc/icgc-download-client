@@ -32,8 +32,8 @@ from icgcget.clients.portal_client import call_api
 
 class EgaDownloadClient(DownloadClient):
 
-    def __init__(self, pickle_path=None, verify=True):
-        super(EgaDownloadClient, self) .__init__(pickle_path)
+    def __init__(self, json_path=None, verify=True):
+        super(EgaDownloadClient, self) .__init__(json_path)
         self.repo = 'ega'
         self.verify = verify
 

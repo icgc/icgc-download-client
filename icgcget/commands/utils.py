@@ -17,6 +17,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import re
+import json
+import os
+import psutil
+import logging
 import click
 import yaml
 from icgcget.clients import errors
@@ -32,7 +36,7 @@ def api_error_catch(self, func, *args):
         raise click.Abort
 
 
-def check_access(self, access, name, path="Default", password="Default", secret_key="Default"):
+def check_access(self, access, name, path="Default", password="Default", secret_key="Default", udt=True):
     if access is None:
         self.logger.error("No credentials provided for the {} repository".format(name))
         raise click.BadParameter("Please provide credentials for {}".format(name))
@@ -42,9 +46,14 @@ def check_access(self, access, name, path="Default", password="Default", secret_
     if secret_key is None:
         self.logger.error("No secret key provided for the {} repository".format(name))
         raise click.BadParameter("Please provide a secret key for {}".format(name))
+    if not isinstance(udt, bool):
+        raise click.BadParameter("UDT flag must be in boolean format")
     if path is None:
         self.logger.error("Path to {} download client not provided.".format(name))
         raise click.BadParameter("Please provide a path to the {} download client".format(name))
+    if not os.path.isfile(path):
+        self.logger.error("Path to {} download client cannot be resolved.".format(name))
+        raise click.BadParameter("Please provide a complete path to the {} download client".format(name))
 
 
 def compare_ids(current_session, old_session, override):
@@ -78,11 +87,7 @@ def config_parse(filename, default_filename, empty_ok=False):
     try:
         config_text = open(filename, 'r')
     except IOError as ex:
-        if default:
-            return {}
-        else:
-            print "Config file {0} not found: {1}".format(filename, ex.strerror)
-            raise click.Abort()
+        config_text = config_errors("Config file {0} not found: {1}".format(filename, ex.strerror), default)
     try:
         yaml.SafeLoader.add_constructor("tag:yaml.org,2002:python/unicode", constructor)
         config_temp = yaml.safe_load(config_text)
@@ -92,19 +97,13 @@ def config_parse(filename, default_filename, empty_ok=False):
                       'check': config_download}
             if 'logfile' in config_temp:
                 config['logfile'] = config_temp['logfile']
-        else:
-            if default or empty_ok:
-                return {}
-            else:
-                print "Config file {} is an empty file.".format(filename)
-                raise click.Abort()
-    except yaml.YAMLError:
-        config_errors("Failed to parse config file {}.  Config must be in YAML format.".format(filename), default)
-        if default:
+        elif empty_ok:
             return {}
         else:
-            print "Failed to parse config file {}.  Config must be in YAML format.".format(filename)
-            raise click.Abort()
+            config = config_errors("Config file {} is an empty file.".format(filename), default)
+    except yaml.YAMLError:
+        config = config_errors("Failed to parse config file {}.  Config must be in YAML format.".format(filename),
+                               default)
     return config
 
 
@@ -113,7 +112,7 @@ def constructor(loader, node):
 
 
 def filter_manifest_ids(self, manifest_json, repos):
-    fi_ids = []  # Function to return a list of unique  file ids from a manifest.  Throws error if not unique
+    fi_ids = []  # Function to return a list of unique file ids from a manifest.  Throws error if not unique
     for repo_info in manifest_json["entries"]:
         if repo_info["repo"] in repos:
             for file_info in repo_info["files"]:
@@ -144,6 +143,20 @@ def get_manifest_json(self, file_ids, api_url, repos, portal):
         raise click.BadArgumentUsage("Multiple manifest files specified.")
     manifest_json = api_error_catch(self, portal.get_manifest_id, file_ids[0], api_url, repos)
     return manifest_json
+
+
+def load_json(json_path, abort=True):
+    if os.path.isfile(json_path):
+        try:
+            old_session_info = json.load(open(json_path, 'r+'))
+            if abort and psutil.pid_exists(old_session_info['pid']):
+                raise click.Abort("Download currently in progress")
+            return old_session_info
+        except ValueError:
+            logger = logging.getLogger('__log__')
+            logger.warning("Corrupted download state found.  Cleaning...")
+            os.remove(json_path)
+    return None
 
 
 def match_repositories(self, repos, copies):

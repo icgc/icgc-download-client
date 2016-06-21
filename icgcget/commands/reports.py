@@ -16,12 +16,11 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-import os
 import logging
 from collections import OrderedDict
 from tabulate import tabulate
 from icgcget.commands.utils import match_repositories, get_entities
-from icgcget.clients.utils import convert_size, donor_addition, increment_types, build_table
+from icgcget.clients.utils import convert_size, donor_addition, increment_types, build_table, search_recursive
 
 
 class StatusScreenDispatcher(object):
@@ -59,8 +58,7 @@ class StatusScreenDispatcher(object):
             size = entity["fileCopies"][0]["fileSize"]
             repository, copy = match_repositories(self, repos, entity)
             data_type = entity["dataCategorization"]["dataType"]
-            if output:
-                state = copy["fileName"] in os.listdir(output)
+            state = search_recursive(copy["fileName"], output)
             type_sizes = increment_types(data_type, type_sizes, size)
             type_counts = increment_types(data_type, type_counts, 1)
             repo_sizes[repository] = increment_types(data_type, repo_sizes[repository], size)
@@ -90,7 +88,7 @@ class StatusScreenDispatcher(object):
             size = entity["fileCopies"][0]["fileSize"]
             repository, copy = match_repositories(self, repos, entity)
             data_type = entity["dataCategorization"]["dataType"]
-            if output and copy["fileName"] in os.listdir(output):
+            if search_recursive(copy["fileName"], output):
                 state = "Yes"
             else:
                 state = "No"

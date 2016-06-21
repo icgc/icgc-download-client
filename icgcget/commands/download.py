@@ -19,6 +19,7 @@
 import logging
 import os
 import shutil
+import datetime
 
 import click
 import psutil
@@ -28,7 +29,7 @@ from icgcget.clients.ega.ega_client import EgaDownloadClient
 from icgcget.clients.gdc.gdc_client import GdcDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
-from icgcget.clients.utils import calculate_size, convert_size
+from icgcget.clients.utils import calculate_size, convert_size, search_recursive
 
 from icgcget.commands.utils import api_error_catch, filter_manifest_ids, check_access, get_manifest_json
 
@@ -45,7 +46,8 @@ class DownloadDispatcher(object):
     def download_manifest(self, repos, file_ids, manifest, output, api_url, verify):
         portal = portal_client.IcgcPortalClient(verify)
         manifest_json = self.get_manifest(manifest, file_ids, api_url, repos, portal)
-        size, session_info = calculate_size(manifest_json)
+        session_info = {'pid': os.getpid(), 'start_time': datetime.datetime.utcnow().isoformat(), 'command': file_ids}
+        size = calculate_size(manifest_json, session_info)
         object_ids = session_info['object_ids']
         if manifest:
             file_ids = []
@@ -65,7 +67,7 @@ class DownloadDispatcher(object):
             file_copies = entity['fileCopies']
             for copy in file_copies:
                 if copy['repoCode'] == repo:
-                    if output and copy["fileName"] in os.listdir(output):
+                    if search_recursive(copy["fileName"], output):
                         object_ids[repo].pop(entity['id'])
                         self.logger.warning("File %s found in download directory, skipping", entity['id'])
                         break
@@ -109,7 +111,7 @@ class DownloadDispatcher(object):
             self.move_files(staging, output)
 
         if 'ega' in object_ids and object_ids['ega']:
-            check_access(self, ega_username, 'ega', ega_path, ega_password)
+            check_access(self, ega_username, 'ega', ega_path, ega_password, udt=ega_udt)
             if ega_transport_parallel != '1':
                 self.logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
                                     "downloads.  This option is not recommended.")
@@ -143,7 +145,7 @@ class DownloadDispatcher(object):
             self.move_files(staging, output)
 
         if 'gdc' in object_ids and object_ids['gdc']:
-            check_access(self, gdc_token, 'gdc', gdc_path)
+            check_access(self, gdc_token, 'gdc', gdc_path, udt=gdc_udt)
             uuids = self.get_uuids(object_ids['gdc'])
             self.gdc_client.session = session
             return_code = self.gdc_client.download(uuids, gdc_token, gdc_path, staging, gdc_transport_parallel,
@@ -181,24 +183,13 @@ class DownloadDispatcher(object):
         return manifest_json
 
     def move_files(self, staging, output):
-        for staged_file in os.listdir(staging):
-            if staged_file != "state.json":
-                try:
-                    shutil.move(staging + '/' + staged_file, output)
-                except shutil.Error:
-                    self.logger.warning('File %s already present in download directory', staged_file)
-
-    def filter_manifest_ids(self, manifest_json, repos):
-        fi_ids = []  # Function to return a list of unique  file ids from a manifest.  Throws error if not unique
-        for repo_info in manifest_json["entries"]:
-            if repo_info["repo"] in repos:
-                for file_info in repo_info["files"]:
-                    if file_info["id"] in fi_ids:
-                        self.logger.error("Supplied manifest has repeated file identifiers.  Please specify a " +
-                                          "list of repositories to prioritize")
-                        raise click.Abort
-                    else:
-                        fi_ids.append(file_info["id"])
-        if not fi_ids:
-            self.logger.warning("Files on manifest are not found on specified repositories")
-            raise click.Abort
+        for root, dirs, files in os.walk(staging, topdown=False):
+            for staged_file in files:
+                if staged_file != "state.json":
+                    try:
+                        shutil.move(os.path.join(root, staged_file), output)
+                    except shutil.Error:
+                        self.logger.warning('File %s already present in download directory', staged_file)
+                        os.remove(os.path.join(root, staged_file))
+            for stage_dir in dirs:
+                os.rmdir(os.path.join(root, stage_dir))

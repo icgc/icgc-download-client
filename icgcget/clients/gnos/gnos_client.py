@@ -24,8 +24,8 @@ from icgcget.clients.errors import SubprocessError
 
 class GnosDownloadClient(DownloadClient):
 
-    def __init__(self, pickle_path=None):
-        super(GnosDownloadClient, self) .__init__(pickle_path)
+    def __init__(self, json_path=None):
+        super(GnosDownloadClient, self) .__init__(json_path)
         self.repo = 'cghub'
 
     def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, password=None):

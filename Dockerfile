@@ -23,7 +23,7 @@ RUN \
   apt-get install libicu55 && \
 # Required for Genetorrent and Icgc
   apt-get install -y  openssl libssl-dev
-# Required to downloade Genetorrent
+# Required to download Genetorrent
 
 #
 # Install Oracle JDK 8 for icgc-storage client 
