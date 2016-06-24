@@ -37,7 +37,7 @@ from icgcget.commands.utils import api_error_catch, filter_manifest_ids, check_a
 
 
 class DownloadDispatcher(object):
-    def __init__(self, pickle_path, docker=False):
+    def __init__(self, pickle_path=None, docker=False):
         self.logger = logging.getLogger("__log__")
         self.gdc_client = GdcDownloadClient(pickle_path, docker)
         self.ega_client = EgaDownloadClient(pickle_path, docker)

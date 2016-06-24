@@ -62,7 +62,7 @@ class DownloadClient(object):
             if process.poll() is not None:
                 break
             if output:
-                parser(output.strip())
+                parser(output)
         return_code = process.poll()
         if return_code == 0 and self.session:
             self.session_update('', self.repo)  # clear any running files if exit cleanly
@@ -80,6 +80,8 @@ class DownloadClient(object):
         json.dump(self.session, open(self.path, 'w', 0777))
 
     def _run_test_command(self, args, forbidden, not_found, env=None, timeout=2):
+        env = dict(os.environ)
+        env['PATH'] = '/usr/local/bin:' + env['PATH']
         if None in args:
             self.logger.warning("Missing argument in %s", args)
             return 1
@@ -91,7 +93,7 @@ class DownloadClient(object):
                 return ex.returncode
             else:
                 return code
-        except OSError:
+        except OSError as ex:
 
             return 2
         except subprocess32.TimeoutExpired as ex:
@@ -102,7 +104,7 @@ class DownloadClient(object):
     def parse_test_ex(ex, forbidden, not_found):
         invalid_login = re.findall(forbidden, ex.output)
         not_found = re.findall(not_found, ex.output)
-        if invalid_login or not ex.message:
+        if invalid_login:
             return 3
         elif not_found:
             return 404

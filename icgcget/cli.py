@@ -197,8 +197,11 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
           icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
     repos = validate_repos(repos, REPOS)
     dispatch = AccessCheckDispatcher()
-    dispatch.access_checks(repos, ids, manifest, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
-                           icgc_token, pdc_key, pdc_secret, pdc_path, output, ctx.obj, API_URL, no_ssl_verify)
+    download_dispatch = DownloadDispatcher()
+    download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
+    dispatch.access_checks(repos, download_session['file_data'], cghub_key, cghub_path, ega_username, ega_password,
+                           gdc_token, icgc_token, pdc_key, pdc_secret, pdc_path, output, ctx.obj, API_URL,
+                           no_ssl_verify)
 
 
 @cli.command()

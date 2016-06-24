@@ -24,9 +24,7 @@ from icgcget.clients.gdc.gdc_client import GdcDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
 from icgcget.clients.gnos.gnos_client import GnosDownloadClient
-from icgcget.clients.portal_client import IcgcPortalClient
-from icgcget.commands.utils import check_access, api_error_catch, get_manifest_json, filter_manifest_ids, \
-    match_repositories
+from icgcget.commands.utils import check_access, api_error_catch
 
 
 class AccessCheckDispatcher(object):
@@ -36,7 +34,7 @@ class AccessCheckDispatcher(object):
         self.gdc_ids = []
         self.pdc_urls = []
 
-    def access_checks(self, repo_list, file_ids, manifest, cghub_key, cghub_path, ega_username, ega_password,
+    def access_checks(self, repo_list, file_data, cghub_key, cghub_path, ega_username, ega_password,
                       gdc_token, icgc_token, pdc_key, pdc_secret_key, pdc_path, output, docker, api_url, verify):
 
         gdc_client = GdcDownloadClient(verify=verify)
@@ -45,17 +43,28 @@ class AccessCheckDispatcher(object):
         icgc_client = StorageClient(verify=verify)
         pdc_client = PdcDownloadClient(docker=docker)
 
-        if 'gdc' in repo_list or 'cghub' in repo_list or 'pdc' in repo_list:
-            self.entity_search(manifest, file_ids, api_url, repo_list, verify)
+        if 'gdc' in file_data:
+            for gdc_file in file_data['gdc'].values():
+                self.gdc_ids.append(gdc_file['uuid'])
+
+        if 'cghub' in file_data:
+            for cghub_file in file_data['cghub'].values():
+                self.cghub_ids.append(cghub_file['uuid'])
+
+        if 'pdc' in file_data:
+            for pdc_file in file_data['pdc'].values():
+                self.pdc_urls.append(pdc_file['uuid'])
 
         if "collaboratory" in repo_list:
             check_access(self, icgc_token, "icgc")
             self.access_response(icgc_client.access_check(icgc_token, repo="collab", api_url=api_url),
                                  "Collaboratory.")
+
         if "aws-virginia" in repo_list:
             check_access(self, icgc_token, "icgc")
             self.access_response(icgc_client.access_check(icgc_token, repo="aws", api_url=api_url),
                                  "Amazon Web Server.")
+
         if 'ega' in repo_list:
             check_access(self, ega_username, 'ega', password=ega_password)
             self.access_response(ega_client.access_check(ega_username, password=ega_password), "EGA.")
@@ -99,21 +108,3 @@ class AccessCheckDispatcher(object):
             return False
         else:
             return True
-
-    def entity_search(self, manifest, file_ids, api_url, repo_list, verify):
-        if file_ids:
-            portal = IcgcPortalClient(verify)
-            if manifest:
-                manifest_json = get_manifest_json(self, file_ids, api_url, repo_list, portal)
-                file_ids = filter_manifest_ids(self, manifest_json, repo_list)
-            entities = api_error_catch(self, portal.get_metadata_bulk, file_ids, api_url)
-            for entity in entities:
-                repository, copy = match_repositories(self, repo_list, entity)
-                if not repository:
-                    continue
-                if repository == "gdc":
-                    self.gdc_ids.append(entity["dataBundle"]["dataBundleId"])
-                if repository == "cghub":
-                    self.cghub_ids.append(entity["dataBundle"]["dataBundleId"])
-                if repository == "pdc":
-                    self.pdc_urls.append('s3://' + copy["repoDataPath"])
