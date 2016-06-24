@@ -27,7 +27,7 @@ from icgcget.clients.portal_client import call_api
 class GdcDownloadClient(DownloadClient):
 
     def __init__(self, json_path=None, docker=False, verify=True):
-        super(GdcDownloadClient, self) .__init__(json_path, docker)
+        super(GdcDownloadClient, self).__init__(json_path, docker)
         self.repo = 'gdc'
         self.verify = verify
 
@@ -65,11 +65,7 @@ class GdcDownloadClient(DownloadClient):
                 raise ex
 
     def print_version(self, path):
-        call_args = []
-        if self.docker:
-            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
-        call_args.extend([path, '--version'])
-        self._run_command(call_args, self.version_parser)
+        super(GdcDownloadClient, self).print_version(path)
 
     def version_parser(self, response):
         version = re.findall(r"v[0-9.]+", response)

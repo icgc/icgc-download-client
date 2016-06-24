@@ -31,7 +31,11 @@ class DownloadClient(object):
 
     @abc.abstractmethod
     def print_version(self, path):
-        return
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend([path, '--version'])
+        self._run_command(call_args, self.version_parser)
 
     @abc.abstractmethod
     def version_parser(self, output):

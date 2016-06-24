@@ -26,7 +26,7 @@ from icgcget.clients.errors import SubprocessError
 class GnosDownloadClient(DownloadClient):
 
     def __init__(self, json_path=None, docker=False):
-        super(GnosDownloadClient, self) .__init__(json_path, docker)
+        super(GnosDownloadClient, self).__init__(json_path, docker)
         self.repo = 'cghub'
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
@@ -67,11 +67,7 @@ class GnosDownloadClient(DownloadClient):
             raise SubprocessError(result, "Genetorrent failed with code {}".format(result))
 
     def print_version(self, path):
-        call_args = []
-        if self.docker:
-            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
-        call_args.extend([path, '--version'])
-        self._run_command(call_args, self.version_parser)
+        super(GnosDownloadClient, self).print_version(path)
 
     def version_parser(self, response):
         version = re.findall(r"release [0-9.]+", response)

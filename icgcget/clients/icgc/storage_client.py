@@ -26,7 +26,7 @@ from icgcget.clients.portal_client import call_api
 class StorageClient(DownloadClient):
 
     def __init__(self, json_path=None, docker=False, verify=True):
-        super(StorageClient, self) .__init__(json_path, docker)
+        super(StorageClient, self).__init__(json_path, docker)
         self.verify = verify
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,

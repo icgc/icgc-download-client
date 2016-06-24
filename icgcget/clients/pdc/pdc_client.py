@@ -73,11 +73,7 @@ class PdcDownloadClient(DownloadClient):
                 raise SubprocessError(result, "AWS failed with code {}".format(result))
 
     def print_version(self, path):
-        call_args = []
-        if self.docker:
-            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
-        call_args.extend([path, '--version'])
-        self._run_command(call_args, self.version_parser)
+        super(PdcDownloadClient, self).print_version(path)
 
     def download_parser(self, output):
         self.logger.info(output)
