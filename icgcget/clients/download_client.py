@@ -47,6 +47,9 @@ class DownloadClient(object):
 
     def _run_command(self, args, parser, env=None):
         self.logger.debug(args)
+        if None in args:
+            self.logger.warning("Missing argument in %s", args)
+            return 1
         env = dict(os.environ)
         env['PATH'] = '/usr/local/bin:' + env['PATH']  # virtalenv compatibility
         try:
