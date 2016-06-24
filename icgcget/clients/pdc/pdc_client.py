@@ -25,20 +25,28 @@ from icgcget.clients.download_client import DownloadClient
 
 class PdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None):
-        super(PdcDownloadClient, self).__init__(json_path)
+    def __init__(self, json_path=None, docker=False):
+        super(PdcDownloadClient, self).__init__(json_path, docker)
         self.repo = 'pdc'
         self.url = '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/'
 
-    def download(self, data_paths, key, tool_path, output, processes, udt=None, file_from=None, repo=None,
+    def download(self, data_paths, key, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  secret_key=None):
         code = 0
         env_dict = dict(os.environ)
         env_dict['AWS_ACCESS_KEY_ID'] = key
         env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:
-            call_args = [tool_path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/', 'cp',
-                         data_path, output + '/']
+            call_args = []
+            if self.docker:
+                call_args = ['docker', 'run' '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY' +
+                             secret_key, '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+            call_args.extend([tool_path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/',
+                              'cp', data_path])
+            if self.docker:
+                call_args.extend(['/icgc/mnt/'])
+            else:
+                call_args.extend([staging + '/'])
             code = self._run_command(call_args, self.download_parser, env_dict)
             if code != 0:
                 return code
@@ -50,7 +58,10 @@ class PdcDownloadClient(DownloadClient):
         env_dict['AWS_ACCESS_KEY_ID'] = key
         env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:
-            call_args = [path, 's3', self.url, 'cp', data_path, output + '/', '--dryrun']
+            call_args = []
+            if self.docker:
+                call_args = ['docker', 'run', '-t', '-v', output + ':/icgc/mnt', 'icgc/icgc-get:test']
+            call_args.extend([path, 's3', self.url, 'cp', data_path, output + '/', '--dryrun'])
             result = self._run_test_command(call_args, "(403)", "(404)", env_dict, timeout=4)
             if result == 3:
                 return False
@@ -62,7 +73,10 @@ class PdcDownloadClient(DownloadClient):
                 raise SubprocessError(result, "AWS failed with code {}".format(result))
 
     def print_version(self, path):
-        call_args = [path, '--version']
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend([path, '--version'])
         self._run_command(call_args, self.version_parser)
 
     def download_parser(self, output):

@@ -24,21 +24,21 @@ from icgcget.clients.pdc.pdc_client import PdcDownloadClient
 from icgcget.clients.gnos.gnos_client import GnosDownloadClient
 
 
-def versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, version_num):
+def versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, docker, version_num):
     logger = logging.getLogger("__log__")
     logger.warning("ICGC-Get Version: %s", version_num)
     logger.warning("Clients:")
-    check_version_path(PdcDownloadClient(), "PDC", pdc_path)
-    check_version_path(EgaDownloadClient(), "EGA", ega_path)
-    check_version_path(GdcDownloadClient(), "GDC", gdc_path)
-    check_version_path(GnosDownloadClient(), "CGHub", cghub_path)
-    check_version_path(StorageClient(), "ICGC", icgc_path)
+    check_version_path(PdcDownloadClient(docker=docker), "PDC", pdc_path)
+    check_version_path(EgaDownloadClient(docker=docker), "EGA", ega_path)
+    check_version_path(GdcDownloadClient(docker=docker), "GDC", gdc_path)
+    check_version_path(GnosDownloadClient(docker=docker), "CGHub", cghub_path)
+    check_version_path(StorageClient(docker=docker), "ICGC", icgc_path)
 
 
 def check_version_path(client, name, path):
     logger = logging.getLogger("__log__")
     if path:
-        if os.path.isfile(path):
+        if os.path.isfile(path) or client.docker:
             client.print_version(path)
         else:
             logger.warning(" Path %s to %s client could not be resolved.", path, name)

@@ -36,19 +36,19 @@ def build_table(table, repo, sizes, counts, donors, downloads, output):
     return table
 
 
-def calculate_size(manifest_json, session_info):
+def calculate_size(manifest_json, download_session):
     size = 0
-    object_ids = {}
+    file_data = {}
     for repo_info in manifest_json["entries"]:
         repo = repo_info["repo"]
-        object_ids[repo] = {}
+        file_data[repo] = {}
         for file_info in repo_info["files"]:
-            object_ids[repo][file_info['id']] = {'uuid': file_info["repoFileId"], 'state': "Not started",
-                                                 'filename': 'None', 'index_filename': 'None',
-                                                 'fileUrl': 'None', 'size': file_info['size']}
+            file_data[repo][file_info['id']] = {'uuid': file_info["repoFileId"], 'state': "Not started",
+                                                'fileName': 'None', 'index_filename': 'None',
+                                                'fileUrl': 'None', 'size': file_info['size']}
             size += file_info["size"]
-    session_info['object_ids'] = object_ids
-    return size, session_info
+    download_session['file_data'] = file_data
+    return size, download_session
 
 
 def convert_size(num, suffix='B'):
@@ -80,6 +80,13 @@ def flatten_dict(dictionary, parent_key='', sep='_'):
     return dict(items)
 
 
+def flatten_file_data(file_data):
+    file_ids = []
+    for repo in file_data:
+        file_ids.extend(file_data[repo].keys())
+    return file_ids
+
+
 def increment_types(typename, count_dict, size):
     if typename not in count_dict:
         count_dict[typename] = 0
@@ -102,5 +109,8 @@ def search_recursive(filename, output):
     for root, dirs, files in os.walk(output, topdown=False):
         for name in files:
             if name == filename:
+                return True
+        for directory in dirs:
+            if directory == filename:
                 return True
     return False

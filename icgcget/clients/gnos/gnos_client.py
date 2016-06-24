@@ -18,30 +18,42 @@
 
 import re
 import tempfile
+import os
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.errors import SubprocessError
 
 
 class GnosDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None):
-        super(GnosDownloadClient, self) .__init__(json_path)
+    def __init__(self, json_path=None, docker=False):
+        super(GnosDownloadClient, self) .__init__(json_path, docker)
         self.repo = 'cghub'
 
-    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, password=None):
-        access_file = tempfile.NamedTemporaryFile()
+    def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
+                 password=None):
+        access_file = tempfile.NamedTemporaryFile(dir=staging)
         access_file.file.write(access)
         access_file.file.seek(0)
-        call_args = [tool_path, '-vv', '-c', access_file.name, '-d']
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+        call_args.extend([tool_path, '-vv', '-d'])
         call_args.extend(uuids)
-        call_args.extend(['-p', output])
+        if self.docker:
+            access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
+            call_args.extend(['-c', access_path, '-p', '/icgc'])
+        else:
+            call_args.extend(['-c', access_file.name, '-p', staging])
         code = self._run_command(call_args, self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
         access_file = tempfile.NamedTemporaryFile()
         access_file.file.write(access)
-        call_args = [path, '-vv', '-c', access_file.name, '-d']
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', '-v', output + ':/icgc/mnt', 'icgc/icgc-get:test']
+        call_args.extend([path, '-vv', '-c', access_file.name, '-d'])
         call_args.extend(uuids)
         call_args.extend(['-p', output])
         result = self._run_test_command(call_args, "403 Forbidden", "404 Not Found")
@@ -52,10 +64,14 @@ class GnosDownloadClient(DownloadClient):
         elif result == 2:
             raise SubprocessError(result, "Path to gentorrent client did not lead to expected application")
         else:
-            raise SubprocessError(result, "Genetorrent failed with code %s".format(result))
+            raise SubprocessError(result, "Genetorrent failed with code {}".format(result))
 
     def print_version(self, path):
-        self._run_command([path, '--version'], self.version_parser)
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend([path, '--version'])
+        self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):
         version = re.findall(r"release [0-9.]+", response)

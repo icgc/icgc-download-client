@@ -37,13 +37,13 @@ class AccessCheckDispatcher(object):
         self.pdc_urls = []
 
     def access_checks(self, repo_list, file_ids, manifest, cghub_key, cghub_path, ega_username, ega_password,
-                      gdc_token, icgc_token, pdc_key, pdc_secret_key, pdc_path, output, api_url, verify):
+                      gdc_token, icgc_token, pdc_key, pdc_secret_key, pdc_path, output, docker, api_url, verify):
 
         gdc_client = GdcDownloadClient(verify=verify)
         ega_client = EgaDownloadClient(verify=verify)
-        gt_client = GnosDownloadClient()
+        gt_client = GnosDownloadClient(docker=docker)
         icgc_client = StorageClient(verify=verify)
-        pdc_client = PdcDownloadClient()
+        pdc_client = PdcDownloadClient(docker=docker)
 
         if 'gdc' in repo_list or 'cghub' in repo_list or 'pdc' in repo_list:
             self.entity_search(manifest, file_ids, api_url, repo_list, verify)
@@ -68,7 +68,7 @@ class AccessCheckDispatcher(object):
 
         if 'cghub' in repo_list:
             if self.id_check('cghub', self.cghub_ids):
-                check_access(self, cghub_key, 'cghub', cghub_path)
+                check_access(self, cghub_key, 'cghub', gt_client.docker, cghub_path)
                 try:
                     self.access_response(gt_client.access_check(cghub_key, self.cghub_ids, cghub_path,
                                                                 output=output), "CGHub files.")
@@ -109,6 +109,8 @@ class AccessCheckDispatcher(object):
             entities = api_error_catch(self, portal.get_metadata_bulk, file_ids, api_url)
             for entity in entities:
                 repository, copy = match_repositories(self, repo_list, entity)
+                if not repository:
+                    continue
                 if repository == "gdc":
                     self.gdc_ids.append(entity["dataBundle"]["dataBundleId"])
                 if repository == "cghub":

@@ -32,16 +32,19 @@ from icgcget.clients.portal_client import call_api
 
 class EgaDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, verify=True):
-        super(EgaDownloadClient, self) .__init__(json_path)
+    def __init__(self, json_path=None, docker=False, verify=True):
+        super(EgaDownloadClient, self) .__init__(json_path, docker)
         self.repo = 'ega'
         self.verify = verify
 
-    def download(self, object_ids, access, tool_path, output, parallel, udt=None, file_from=None, repo=None,
+    def download(self, object_ids, access, tool_path, staging, parallel, udt=None, file_from=None, repo=None,
                  password=None):
         key = ''.join(SystemRandom().choice(ascii_uppercase + digits) for _ in range(4))
         label = object_ids[0] + '_download_request'
-        args = ['java', '-jar', tool_path, '-p', access, password, '-nt', parallel]
+        args = []
+        if self.docker:
+            args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+        args.extend(['java', '-jar', tool_path, '-p', access, password, '-nt', parallel])
         for object_id in object_ids:
             request_call_args = args
             if object_id[3] == 'D':
@@ -53,7 +56,7 @@ class EgaDownloadClient(DownloadClient):
             if rc_request != 0:
                 return rc_request
         download_call_args = args
-        download_call_args.extend(['-dr', label, '-path', output])
+        download_call_args.extend(['-dr', label, '-path', staging])
         if udt:
             download_call_args.append('-udt')
         rc_download = self._run_command(download_call_args, self.download_parser)
@@ -61,9 +64,9 @@ class EgaDownloadClient(DownloadClient):
             return rc_download
         decrypt_call_args = args
         decrypt_call_args.append('-dc')
-        for cip_file in os.listdir(output):  # File names cannot be dynamically predicted from dataset names
+        for cip_file in os.listdir(staging):  # File names cannot be dynamically predicted from dataset names
             if fnmatch.fnmatch(cip_file, '*.cip'):  # Tool attempts to decrypt all encrypted files in download directory
-                decrypt_call_args.append(output + '/' + cip_file)
+                decrypt_call_args.append(staging + '/' + cip_file)
         decrypt_call_args.extend(['-dck', key])
         rc_decrypt = self._run_command(decrypt_call_args, self.download_parser)
         if rc_decrypt != 0:
@@ -92,7 +95,11 @@ class EgaDownloadClient(DownloadClient):
 
     def print_version(self, path):
         # Tool automatically shows version on invocation with demo credentials
-        self._run_command(['java', '-jar', path, '-p', 'demo@test.org', '123pass'], self.version_parser)
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend(['java', '-jar', path, '-p', 'demo@test.org', '123pass'])
+        self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):
         version = re.findall(r"Version: [0-9.]+", response)

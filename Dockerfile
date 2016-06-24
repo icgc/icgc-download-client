@@ -5,7 +5,7 @@
 #/___/\____/\____/\____/   \____/\___/\__/
 # Banner @ http://goo.gl/VCY0tD
 
-FROM       ubuntu:16.04
+FROM       ubuntu:14.04
 MAINTAINER ICGC <dcc-support@icgc.org>
 
 ENV EGA_VERSION 2.2.2
@@ -20,7 +20,7 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y libfuse-dev fuse software-properties-common && \
   apt-get install -y python-pip python-dev libffi-dev && \
-  apt-get install libicu55 && \
+  apt-get install -y libicu52 && \
 # Required for Genetorrent and Icgc
   apt-get install -y  openssl libssl-dev
 # Required to download Genetorrent
@@ -81,9 +81,7 @@ RUN mkdir -p /icgc/ega-download-demo && \
     wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-client_v1.0.1_Ubuntu14.04_x64_0.zip -O temp.zip ; \
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
     rm temp.zip && \
-    cd /icgc && \
-    apt-get remove -y unzip curl wget && \
-    apt autoremove -y
+    cd /icgc
 
 
 #
@@ -95,8 +93,6 @@ COPY . /icgc/icgcget/
 RUN cd /icgc/icgcget && \
     apt-get upgrade -y && \
     pip install -U pip setuptools && \
-    pip install -r requirements.txt && \
-    python setup.py install && \
     pip install awscli && \
     pip uninstall -y pip setuptools
 
@@ -112,5 +108,3 @@ ENV ICGCGET_EGA_PATH=/icgc/ega-download-demo/EgaDemoClient.jar
 ENV ICGCGET_CGHUB_PATH=/icgc/genetorrent/bin/gtdownload
 ENV ICGCGET_PDC_PATH=/usr/local/bin/aws
 ENV ICGCGET_CONFIG=/icgc/mnt/config.yaml
-
-ENTRYPOINT ["icgc-get"]
