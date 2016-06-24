@@ -25,19 +25,27 @@ from icgcget.clients.portal_client import call_api
 
 class StorageClient(DownloadClient):
 
-    def __init__(self, json_path=None, verify=True):
-        super(StorageClient, self) .__init__(json_path)
+    def __init__(self, json_path=None, docker=False, verify=True):
+        super(StorageClient, self) .__init__(json_path, docker)
         self.verify = verify
 
-    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, password=None):
+    def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
+                 password=None):
+        call_args = []
         env_dict = dict(os.environ)
         env_dict['ACCESSTOKEN'] = access
         env_dict['TRANSPORT_PARALLEL'] = processes
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
-        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
+        if self.docker:
+            call_args = ['docker', 'run', '-e', 'ACCESSTOKEN='+access, '-e', 'TRANSPORT_PARALLEL=' + processes, '-t',
+                         '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+        call_args.extend([tool_path, '--profile', repo, 'download', '--object-id'])
         call_args.extend(uuids)
-        call_args.extend(['--output-dir', output])
+        if self.docker:
+            call_args.extend(['--output-dir', '/icgc/mnt'])
+        else:
+            call_args.extend(['--output-dir', staging])
         if repo == 'collab':
             self.repo = 'collaboratory'
         elif repo == 'aws':
@@ -52,7 +60,11 @@ class StorageClient(DownloadClient):
         return match in resp["scope"]
 
     def print_version(self, path):
-        self._run_command([path, 'version'], self.version_parser)
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend([path, 'version'])
+        self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):
         version = re.findall(r"Version: [0-9.]+", response)

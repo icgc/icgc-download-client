@@ -2,6 +2,7 @@ import abc
 import logging
 import json
 import subprocess
+import os
 import re
 import subprocess32
 
@@ -10,11 +11,12 @@ class DownloadClient(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __init__(self, json_path=None):
+    def __init__(self, json_path=None, docker=False):
         self.logger = logging.getLogger('__log__')
         self.jobs = []
         self.session = {}
         self.path = json_path
+        self.docker = docker
         self.repo = ''
 
     @abc.abstractmethod
@@ -40,9 +42,8 @@ class DownloadClient(object):
 
     def _run_command(self, args, parser, env=None):
         self.logger.debug(args)
-        if None in args:
-            self.logger.warning("Missing argument in %s", args)
-            return 1
+        env = dict(os.environ)
+        env['PATH'] = '/usr/local/bin:' + env['PATH']  # virtalenv compatibility
         try:
             process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
         except subprocess.CalledProcessError as ex:
@@ -63,14 +64,14 @@ class DownloadClient(object):
         return return_code
 
     def session_update(self, file_name, repo):
-        for name, file_object in self.session['object_ids'][repo].iteritems():
-            if file_object['index_filename'] == file_name or file_object['filename'] == file_name or \
+        for name, file_object in self.session['file_data'][repo].iteritems():
+            if file_object['index_filename'] == file_name or file_object['fileName'] == file_name or \
                             file_object['fileUrl'] == file_name:
                 file_object['state'] = 'Running'
-                self.session['object_ids'][repo][name] = file_object
+                self.session['file_data'][repo][name] = file_object
             elif file_object['state'] == 'Running':  # only one file at a time can be downloaded.
                 file_object['state'] = 'Finished'
-                self.session['object_ids'][repo][name] = file_object
+                self.session['file_data'][repo][name] = file_object
         json.dump(self.session, open(self.path, 'w', 0777))
 
     def _run_test_command(self, args, forbidden, not_found, env=None, timeout=2):
@@ -85,7 +86,7 @@ class DownloadClient(object):
                 return ex.returncode
             else:
                 return code
-        except OSError as ex:
+        except OSError:
             return 2
         except subprocess32.TimeoutExpired as ex:
             code = self.parse_test_ex(ex, forbidden, not_found)

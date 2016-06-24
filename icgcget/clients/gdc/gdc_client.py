@@ -18,6 +18,7 @@
 
 import re
 import tempfile
+import os
 from icgcget.clients.errors import ApiError
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.portal_client import call_api
@@ -25,27 +26,31 @@ from icgcget.clients.portal_client import call_api
 
 class GdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, verify=True):
-        super(GdcDownloadClient, self) .__init__(json_path)
+    def __init__(self, json_path=None, docker=False, verify=True):
+        super(GdcDownloadClient, self) .__init__(json_path, docker)
         self.repo = 'gdc'
         self.verify = verify
 
-    def download(self, uuids, access, tool_path, output, processes, udt=None, file_from=None, repo=None, password=None):
-        call_args = [tool_path, 'download']
+    def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None, password=None):
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+        call_args.extend([tool_path, 'download'])
         call_args.extend(uuids)
-        call_args.extend(['--dir', output, '-n', processes])
-
-        if access is not None:  # Enables download of unsecured gdc data
-            access_file = tempfile.NamedTemporaryFile()
-            access_file.file.write(access)
-            access_file.file.seek(0)
-            call_args.extend(['--token', access_file.name])
+        access_file = tempfile.NamedTemporaryFile(dir=staging)
+        access_file.file.write(access)
+        access_file.file.seek(0)
+        if self.docker:
+            access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
+            call_args.extend(['--dir', '/icgc/mnt/', '-n', processes, '--token', access_path])
+        else:
+            call_args.extend(['--dir', staging, '-n', processes, '--token', access_file.name])
         if udt:
             call_args.append('--udt')
         code = self._run_command(call_args, self.download_parser)
         return code
 
-    def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
+    def access_check(self, access, uuids=None, path=None, repo=None, staging=None, api_url=None, password=None):
         base_url = 'https://gdc-api.nci.nih.gov/data/'
         request = base_url + ','.join(uuids)
         header = {'X-auth-Token': access}
@@ -59,7 +64,11 @@ class GdcDownloadClient(DownloadClient):
                 raise ex
 
     def print_version(self, path):
-        self._run_command([path, '--version'], self.version_parser)
+        call_args = []
+        if self.docker:
+            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+        call_args.extend([path, '--version'])
+        self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):
         version = re.findall(r"v[0-9.]+", response)
