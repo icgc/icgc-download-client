@@ -52,7 +52,7 @@ class ConfigureDispatcher(object):
             conf_yaml['pdc'] = {'path': pdc_path, 'key': pdc_key, 'secret': pdc_secret_key}
 
         config_file = open(config_destination, 'w')
-        yaml.dump(conf_yaml, config_file, encoding=None, default_flow_style=False)
+        yaml.safe_dump(conf_yaml, config_file, encoding=None, default_flow_style=False)
         os.environ['ICGCGET_CONFIG'] = config_destination
         print "Configuration file saved to {}".format(config_file.name)
 
@@ -66,6 +66,6 @@ class ConfigureDispatcher(object):
         if not default:
             default = ''
         value = click.prompt(value_name, default=default, hide_input=hide, type=input_type, show_default=not hide)
-        if value == '':
-            value = None
+#        if value == '':
+#            value = None
         return value

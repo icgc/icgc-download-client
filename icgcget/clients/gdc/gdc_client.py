@@ -35,7 +35,7 @@ class GdcDownloadClient(DownloadClient):
                  password=None):
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
         call_args.extend([tool_path, 'download'])
         call_args.extend(uuids)
         access_file = tempfile.NamedTemporaryFile(dir=staging)

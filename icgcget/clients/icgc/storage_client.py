@@ -39,7 +39,7 @@ class StorageClient(DownloadClient):
             os.environ['TRANSPORT_FILEFROM'] = file_from
         if self.docker:
             call_args = ['docker', 'run', '-e', 'ACCESSTOKEN='+access, '-e', 'TRANSPORT_PARALLEL=' + processes, '-t',
-                         '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+                         '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
         call_args.extend([tool_path, '--profile', repo, 'download', '--object-id'])
         call_args.extend(uuids)
         if self.docker:
@@ -62,7 +62,7 @@ class StorageClient(DownloadClient):
     def print_version(self, path):
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+            call_args = ['docker', 'run', '-t', '--rm' 'icgc/icgc-get:test']
         call_args.extend([path, 'version'])
         self._run_command(call_args, self.version_parser)
 

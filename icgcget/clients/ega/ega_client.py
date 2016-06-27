@@ -45,13 +45,13 @@ class EgaDownloadClient(DownloadClient):
         self.label = object_ids[0] + '_download_request'
         args = []
         if self.docker:
-            args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', 'icgc/icgc-get:test']
+            args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
         args.extend(['java', '-jar', tool_path, '-p', access, password, '-nt', parallel])
         request_list_args = args
         request_list_args.append('-lr')
-        rc = self._run_command(request_list_args, self.requests_parser)
-        if rc != 0:
-            return rc
+        code = self._run_command(request_list_args, self.requests_parser)
+        if code != 0:
+            return code
         if not self.skip:
             for object_id in object_ids:
                 request_call_args = args
@@ -105,7 +105,7 @@ class EgaDownloadClient(DownloadClient):
         # Tool automatically shows version on invocation with demo credentials
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', 'icgc/icgc-get:test']
+            call_args = ['docker', 'run', '-t', '--rm' 'icgc/icgc-get:test']
         call_args.extend(['java', '-jar', path, '-p', 'demo@test.org', '123pass'])
         self._run_command(call_args, self.version_parser)
 
