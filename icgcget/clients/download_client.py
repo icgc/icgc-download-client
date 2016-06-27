@@ -50,7 +50,8 @@ class DownloadClient(object):
         if None in args:
             self.logger.warning("Missing argument in %s", args)
             return 1
-        env = dict(os.environ)
+        if not env:
+            env = dict(os.environ)
         env['PATH'] = '/usr/local/bin:' + env['PATH']  # virtalenv compatibility
         try:
             process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)

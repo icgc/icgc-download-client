@@ -36,15 +36,15 @@ class GnosDownloadClient(DownloadClient):
         access_file.file.seek(0)
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([tool_path, '-vv', '-d'])
-        call_args.extend(uuids)
-        if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
-            call_args.extend(['-c', access_path, '-p', '/icgc/mnt'])
+            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test', '/bin/sh',
+                         '-c',  tool_path + ' -vv ' + '-d ' + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt']
+            code = self._run_command(call_args, self.download_parser)
         else:
+            call_args.extend([tool_path, '-vv', '-d'])
+            call_args.extend(uuids)
             call_args.extend(['-c', access_file.name, '-p', staging])
-        code = self._run_command(call_args, self.download_parser)
+            code = self._run_command(call_args, self.download_parser)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
@@ -53,13 +53,12 @@ class GnosDownloadClient(DownloadClient):
         access_file.file.seek(0)
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([path, '-vv', '-d'])
-        call_args.extend(uuids)
-        if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
-            call_args.extend(['-c', access_path, '-p', '/icgc/mnt'])
+            call_args = 'docker run -t -v ' + output + ':/icgc/mnt --rm icgc/icgc-get:test ' + path + ' -vv ' + '-d ' \
+                        + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt'
         else:
+            call_args.extend([path, '-vv', '-d'])
+            call_args.extend(uuids)
             call_args.extend(['-c', access_file.name, '-p', output])
         result = self._run_test_command(call_args, "403 Forbidden", "404 Not Found")
         if result == 0:

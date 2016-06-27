@@ -39,7 +39,7 @@ class PdcDownloadClient(DownloadClient):
         for data_path in data_paths:
             call_args = []
             if self.docker:
-                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY' +
+                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
                              secret_key, '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
             call_args.extend([tool_path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/',
                               'cp', data_path])
@@ -47,7 +47,7 @@ class PdcDownloadClient(DownloadClient):
                 call_args.extend(['/icgc/mnt/'])
             else:
                 call_args.extend([staging + '/'])
-            code = self._run_command(call_args, self.download_parser, env_dict)
+            code = self._run_command(call_args, self.download_parser, env=env_dict)
             if code != 0:
                 return code
             self.session_update(data_path, 'pdc')
