@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #
@@ -105,7 +106,7 @@ class EgaDownloadClient(DownloadClient):
         # Tool automatically shows version on invocation with demo credentials
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', '--rm' 'icgc/icgc-get:test']
+            call_args = ['docker', 'run', '-t', '--rm', 'icgc/icgc-get:test']
         call_args.extend(['java', '-jar', path, '-p', 'demo@test.org', '123pass'])
         self._run_command(call_args, self.version_parser)
 

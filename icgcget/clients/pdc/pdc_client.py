@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #
@@ -41,8 +42,7 @@ class PdcDownloadClient(DownloadClient):
             if self.docker:
                 call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
                              secret_key, '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-            call_args.extend([tool_path, 's3', '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/',
-                              'cp', data_path])
+            call_args.extend([tool_path, 's3', self.url, 'cp', data_path])
             if self.docker:
                 call_args.extend(['/icgc/mnt/'])
             else:

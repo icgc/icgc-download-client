@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #
@@ -62,7 +64,7 @@ class StorageClient(DownloadClient):
     def print_version(self, path):
         call_args = []
         if self.docker:
-            call_args = ['docker', 'run', '-t', '--rm' 'icgc/icgc-get:test']
+            call_args = ['docker', 'run', '-t', '--rm', 'icgc/icgc-get:test']
         call_args.extend([path, 'version'])
         self._run_command(call_args, self.version_parser)
 

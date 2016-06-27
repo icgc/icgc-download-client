@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #
@@ -21,12 +23,12 @@ import os
 import json
 import click
 
-from commands.versions import versions_command
-from commands.reports import StatusScreenDispatcher
-from commands.download import DownloadDispatcher
-from commands.access_checks import AccessCheckDispatcher
-from commands.utils import compare_ids, config_parse, validate_ids, load_json, validate_repos
-from commands.configure import ConfigureDispatcher
+from icgcget.commands.versions import versions_command
+from icgcget.commands.reports import StatusScreenDispatcher
+from icgcget.commands.download import DownloadDispatcher
+from icgcget.commands.access_checks import AccessCheckDispatcher
+from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, validate_repos
+from icgcget.commands.configure import ConfigureDispatcher
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
 REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
@@ -198,7 +200,9 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
     repos = validate_repos(repos, REPOS)
     dispatch = AccessCheckDispatcher()
     download_dispatch = DownloadDispatcher()
-    download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
+    download_session = {'file_data': {}}
+    if ('gdc' in repos or 'ega' in repos or 'pdc' in repos) and ids:
+        download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
     dispatch.access_checks(repos, download_session['file_data'], cghub_key, cghub_path, ega_username, ega_password,
                            gdc_token, icgc_token, pdc_key, pdc_secret, pdc_path, output, ctx.obj, API_URL,
                            no_ssl_verify)

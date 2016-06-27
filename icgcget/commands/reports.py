@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 The Ontario Institute for Cancer Research. All rights reserved.
 #

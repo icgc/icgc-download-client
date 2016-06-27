@@ -61,7 +61,6 @@ RUN mkdir -p /icgc/ega-download-demo && \
     wget -qO- https://cghub.ucsc.edu/software/downloads/GeneTorrent/$GT_VERSION/GeneTorrent-download-$GT_VERSION-$GT_VERSION_LONG-Ubuntu14.04.x86_64.tar.gz | \
     tar xvz --strip-components 1 && \
 
-
 # 
 # Install latest version of storage client distribution
 #
