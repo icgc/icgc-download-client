@@ -20,6 +20,7 @@
 
 import logging
 import os
+import sys
 import json
 import click
 
@@ -131,7 +132,7 @@ def download(ctx, ids, repos, manifest, output,
         download_session = old_download_session
     else:
         validate_ids(ids, manifest)
-        download_session = dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
+        download_session = dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify, unique=True)
     if old_download_session:
         download_session['file_data'] = compare_ids(download_session['file_data'], old_download_session['file_data'],
                                                     override)
@@ -224,10 +225,13 @@ def configure(config):
 @click.pass_context
 def version(ctx, cghub_path, ega_path, gdc_path, icgc_path, pdc_path):
     versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj, VERSION)
+    return 0
 
 
 def main():
     cli()
+    return 0
 
 if __name__ == "__main__":
     main()
+    sys.exit(0)

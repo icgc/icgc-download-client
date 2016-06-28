@@ -46,7 +46,7 @@ class DownloadDispatcher(object):
         self.pdc_client = PdcDownloadClient(pickle_path, docker)
         self.icgc_client = StorageClient(pickle_path, docker)
 
-    def download_manifest(self, repos, file_ids, manifest, output, api_url, verify):
+    def download_manifest(self, repos, file_ids, manifest, output, api_url, verify, unique=False):
         portal = portal_client.IcgcPortalClient(verify)
         manifest_json = self.get_manifest(manifest, file_ids, api_url, repos, portal)
         download_session = {'pid': os.getpid(), 'start_time': datetime.datetime.utcnow().isoformat(),
@@ -60,15 +60,15 @@ class DownloadDispatcher(object):
 
         entities = api_error_catch(self, portal.get_metadata_bulk, file_ids, api_url)
         for entity in entities:
-            repo, copy = match_repositories(self, file_data.keys(), entity)
+            repo, copy = match_repositories(self, repos, entity)
             if not repo:
                 raise click.Abort()
 
             if copy['repoCode'] == repo:
-                if search_recursive(copy["fileName"], output):
+                if unique and search_recursive(copy["fileName"], output):
                     file_data[repo].pop(entity['id'])
                     self.logger.warning("File %s found in download directory, skipping", entity['id'])
-                    break
+                    continue
                 file_data[repo][entity["id"]]['fileName'] = copy["fileName"]
                 file_data[repo][entity["id"]]['dataType'] = entity["dataCategorization"]["dataType"]
                 file_data[repo][entity["id"]]['donorId'] = entity["donors"][0]['donorId']
@@ -77,10 +77,10 @@ class DownloadDispatcher(object):
                     file_data[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]
                 if repo == 'pdc':
                     file_data[repo][entity['id']]['fileUrl'] = 's3://' + copy['repoDataPath']
-                    if output and copy['repoDataPath'].split('/')[1] in os.listdir(output):
+                    if unique and search_recursive(copy['repoDataPath'].split('/')[1], output):
                         file_data[repo].pop(entity['id'])
                         self.logger.warning("File %s found in download directory, skipping", entity['id'])
-                        break
+                        continue
         self.size_check(size, output)
         if not flatten_file_data(file_data):
             self.logger.error("All files were found in download directory, aborting")
@@ -95,14 +95,13 @@ class DownloadDispatcher(object):
                  icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
                  pdc_key, pdc_secret_key, pdc_path, pdc_transport_parallel):
         file_data = session['file_data']
+
         if 'cghub' in file_data and file_data['cghub']:
             check_access(self, cghub_key, 'cghub', self.gt_client.docker, cghub_path)
             self.gt_client.session = session
             uuids = self.get_uuids(file_data['cghub'])
             return_code = self.gt_client.download(uuids, cghub_key, cghub_path, staging, cghub_transport_parallel)
-            session = self.gt_client.session
-            self.check_code('Cghub', return_code)
-            self.move_files(staging, output)
+            session = self.cleanup('CGHub', return_code, staging, output, self.gt_client)
 
         if 'aws-virginia' in file_data and file_data['aws-virginia']:
             check_access(self, icgc_token, 'icgc', self.icgc_client.docker, icgc_path)
@@ -110,9 +109,7 @@ class DownloadDispatcher(object):
             uuids = self.get_uuids(file_data['aws-virginia'])
             return_code = self.icgc_client.download(uuids, icgc_token, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='aws')
-            session = self.icgc_client.session
-            self.check_code('Icgc', return_code)
-            self.move_files(staging, output)
+            session = self.cleanup('ICGC', return_code, staging, output, self.icgc_client)
 
         if 'ega' in file_data and file_data['ega']:
             check_access(self, ega_username, 'ega', self.ega_client.docker, ega_path, ega_password, udt=ega_udt)
@@ -123,9 +120,7 @@ class DownloadDispatcher(object):
             uuids = self.get_uuids(file_data['ega'])
             return_code = self.ega_client.download(uuids, ega_username, ega_path, staging, ega_transport_parallel,
                                                    ega_udt, password=ega_password)
-            session = self.ega_client.session
-            self.check_code('Ega', return_code)
-            self.move_files(staging, output)
+            session = self.cleanup('EGA', return_code, staging, output, self.ega_client)
 
         if 'collaboratory' in file_data and file_data['collaboratory']:
             check_access(self, icgc_token, 'icgc', self.icgc_client.docker, icgc_path)
@@ -133,9 +128,7 @@ class DownloadDispatcher(object):
             uuids = self.get_uuids(file_data['collaboratory'])
             return_code = self.icgc_client.download(uuids, icgc_token, icgc_path, staging, icgc_transport_parallel,
                                                     file_from=icgc_transport_file_from, repo='collab')
-            session = self.icgc_client.session
-            self.check_code('Icgc', return_code)
-            self.move_files(staging, output)
+            session = self.cleanup('ICGC', return_code, staging, output, self.icgc_client)
 
         if 'pdc' in file_data and file_data['pdc']:
             check_access(self, pdc_key, 'pdc', self.pdc_client.docker, pdc_path, secret_key=pdc_secret_key)
@@ -145,9 +138,7 @@ class DownloadDispatcher(object):
             self.pdc_client.session = session
             return_code = self.pdc_client.download(urls, pdc_key, pdc_path, staging, pdc_transport_parallel,
                                                    secret_key=pdc_secret_key)
-            session = self.pdc_client.session
-            self.check_code('Aws', return_code)
-            self.move_files(staging, output)
+            session = self.cleanup('PDC files', return_code, staging, output, self.pdc_client)
 
         if 'gdc' in file_data and file_data['gdc']:
             check_access(self, gdc_token, 'gdc', self.gdc_client.docker, gdc_path, udt=gdc_udt)
@@ -198,3 +189,8 @@ class DownloadDispatcher(object):
                 except shutil.Error:
                     self.logger.warning('File %s already present in download directory', staged_file)
                     os.remove(os.path.join(staging, staged_file))
+
+    def cleanup(self, name, return_code, staging, output, client):
+        self.check_code(name, return_code)
+        self.move_files(staging, output)
+        return client.session

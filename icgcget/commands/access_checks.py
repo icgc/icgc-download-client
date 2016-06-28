@@ -43,18 +43,7 @@ class AccessCheckDispatcher(object):
         gt_client = GnosDownloadClient(docker=docker)
         icgc_client = StorageClient(verify=verify)
         pdc_client = PdcDownloadClient(docker=docker)
-
-        if 'gdc' in file_data:
-            for gdc_file in file_data['gdc'].values():
-                self.gdc_ids.append(gdc_file['uuid'])
-
-        if 'cghub' in file_data:
-            for cghub_file in file_data['cghub'].values():
-                self.cghub_ids.append(cghub_file['uuid'])
-
-        if 'pdc' in file_data:
-            for pdc_file in file_data['pdc'].values():
-                self.pdc_urls.append(pdc_file['uuid'])
+        self.get_ids(file_data)
 
         if "collaboratory" in repo_list:
             check_access(self, icgc_token, "icgc")
@@ -109,3 +98,16 @@ class AccessCheckDispatcher(object):
             return False
         else:
             return True
+
+    def get_ids(self, file_data):
+        if 'gdc' in file_data:
+            for gdc_file in file_data['gdc'].values():
+                self.gdc_ids.append(gdc_file['uuid'])
+
+        if 'cghub' in file_data:
+            for cghub_file in file_data['cghub'].values():
+                self.cghub_ids.append(cghub_file['uuid'])
+
+        if 'pdc' in file_data:
+            for pdc_file in file_data['pdc'].values():
+                self.pdc_urls.append(pdc_file['fileUrl'])

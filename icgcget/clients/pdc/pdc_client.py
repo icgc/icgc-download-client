@@ -60,7 +60,7 @@ class PdcDownloadClient(DownloadClient):
         for data_path in data_paths:
             call_args = []
             if self.docker:
-                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY' +
+                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
                              secret_key, '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
             call_args.extend([path, 's3', self.url, 'cp', data_path])
             if self.docker:

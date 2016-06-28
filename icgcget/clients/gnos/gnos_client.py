@@ -40,7 +40,7 @@ class GnosDownloadClient(DownloadClient):
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
             call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test', '/bin/sh',
-                         '-c',  tool_path + ' -vv ' + '-d ' + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt']
+                         '-c', tool_path + ' -vv ' + '-d ' + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt']
             code = self._run_command(call_args, self.download_parser)
         else:
             call_args.extend([tool_path, '-vv', '-d'])
@@ -56,8 +56,8 @@ class GnosDownloadClient(DownloadClient):
         call_args = []
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
-            call_args = 'docker run -t -v ' + output + ':/icgc/mnt --rm icgc/icgc-get:test ' + path + ' -vv ' + '-d ' \
-                        + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt'
+            call_args = ['docker', 'run', '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test', '/bin/sh',
+                         '-c', path + ' -vv ' + '-d ' + ' '.join(uuids) + ' -c ' + access_path + ' -p /icgc/mnt']
         else:
             call_args.extend([path, '-vv', '-d'])
             call_args.extend(uuids)

@@ -86,7 +86,7 @@ class StatusScreenDispatcher(object):
                     state = "No"
                 file_size = convert_size(size)
                 file_table.append([file_id, file_size[0], file_size[1], data["fileFormat"],
-                                   data_type, repository, data['donorId'], data["filename"], state])
+                                   data_type, repository, data['donorId'], data["fileName"], state])
 
         self.print_table(headers, file_table, table_format)
 
