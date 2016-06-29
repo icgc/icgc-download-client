@@ -44,10 +44,9 @@ class EgaDownloadClient(DownloadClient):
                  password=None):
         key = ''.join(SystemRandom().choice(ascii_uppercase + digits) for _ in range(4))
         self.label = object_ids[0] + '_download_request'
-        args = []
+        args = ['java', '-jar', tool_path, '-p', access, password, '-nt', parallel]
         if self.docker:
-            args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-        args.extend(['java', '-jar', tool_path, '-p', access, password, '-nt', parallel])
+            args = self.prepend_docker_args(args, staging)
         request_list_args = args
         request_list_args.append('-lr')
         code = self._run_command(request_list_args, self.requests_parser)
@@ -104,10 +103,9 @@ class EgaDownloadClient(DownloadClient):
 
     def print_version(self, path):
         # Tool automatically shows version on invocation with demo credentials
-        call_args = []
+        call_args = ['java', '-jar', path, '-p', 'demo@test.org', '123pass']
         if self.docker:
-            call_args = ['docker', 'run', '-t', '--rm', 'icgc/icgc-get:test']
-        call_args.extend(['java', '-jar', path, '-p', 'demo@test.org', '123pass'])
+            call_args = self.prepend_docker_args(call_args)
         self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):

@@ -35,10 +35,7 @@ class GdcDownloadClient(DownloadClient):
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  password=None):
-        call_args = []
-        if self.docker:
-            call_args = ['docker', 'run', '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([tool_path, 'download'])
+        call_args = [tool_path, 'download']
         call_args.extend(uuids)
         access_file = tempfile.NamedTemporaryFile(dir=staging)
         access_file.file.write(access)
@@ -46,6 +43,7 @@ class GdcDownloadClient(DownloadClient):
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
             call_args.extend(['--dir', '/icgc/mnt/', '-n', processes, '--token', access_path])
+            call_args = self.prepend_docker_args(call_args, staging)
         else:
             call_args.extend(['--dir', staging, '-n', processes, '--token', access_file.name])
         if udt:

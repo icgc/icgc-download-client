@@ -35,17 +35,16 @@ class PdcDownloadClient(DownloadClient):
                  secret_key=None):
         code = 0
         env_dict = dict(os.environ)
-        env_dict['AWS_ACCESS_KEY_ID'] = key
-        env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
+
         for data_path in data_paths:
-            call_args = []
-            if self.docker:
-                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
-                             secret_key, '-t', '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-            call_args.extend([tool_path, 's3', self.url, 'cp', data_path])
+            call_args = [tool_path, 's3', self.url, 'cp', data_path]
             if self.docker:
                 call_args.extend(['/icgc/mnt/'])
+                envvars = {'AWS_ACCESS_KEY_ID': key, 'AWS_SECRET_ACCESS_KEY': secret_key}
+                call_args = self.prepend_docker_args(call_args, staging, envvars)
             else:
+                env_dict['AWS_ACCESS_KEY_ID'] = key
+                env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
                 call_args.extend([staging + '/'])
             code = self._run_command(call_args, self.download_parser, env=env_dict)
             if code != 0:
@@ -61,7 +60,7 @@ class PdcDownloadClient(DownloadClient):
             call_args = []
             if self.docker:
                 call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
-                             secret_key, '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
+                             secret_key, '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:0.3.1']
             call_args.extend([path, 's3', self.url, 'cp', data_path])
             if self.docker:
                 call_args.extend(['/icgc/mnt/', '--dryrun'])

@@ -33,25 +33,24 @@ class StorageClient(DownloadClient):
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  password=None):
-        call_args = []
         env_dict = dict(os.environ)
-        env_dict['ACCESSTOKEN'] = access
-        env_dict['TRANSPORT_PARALLEL'] = processes
+
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
-        if self.docker:
-            call_args = ['docker', 'run', '-e', 'ACCESSTOKEN='+access, '-e', 'TRANSPORT_PARALLEL=' + processes, '-t',
-                         '-v', staging + ':/icgc/mnt', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([tool_path, '--profile', repo, 'download', '--object-id'])
+        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
         call_args.extend(uuids)
-        if self.docker:
-            call_args.extend(['--output-dir', '/icgc/mnt'])
-        else:
-            call_args.extend(['--output-dir', staging])
         if repo == 'collab':
             self.repo = 'collaboratory'
         elif repo == 'aws':
             self.repo = 'aws-virginia'
+        if self.docker:
+            call_args.extend(['--output-dir', '/icgc/mnt'])
+            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes}
+            call_args = self.prepend_docker_args(call_args, staging, envvars)
+        else:
+            env_dict['ACCESSTOKEN'] = access
+            env_dict['TRANSPORT_PARALLEL'] = processes
+            call_args.extend(['--output-dir', staging])
         code = self._run_command(call_args, parser=self.download_parser, env=env_dict)
         return code
 
@@ -62,10 +61,9 @@ class StorageClient(DownloadClient):
         return match in resp["scope"]
 
     def print_version(self, path):
-        call_args = []
+        call_args = [path, 'version']
         if self.docker:
-            call_args = ['docker', 'run', '-t', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([path, 'version'])
+            call_args = self.prepend_docker_args(call_args)
         self._run_command(call_args, self.version_parser)
 
     def version_parser(self, response):

@@ -38,6 +38,7 @@ class DownloadClient(object):
         self.path = json_path
         self.docker = docker
         self.repo = ''
+        self.docker_version = 'icgc/icgc-get:0.3.1'
 
     @abc.abstractmethod
     def download(self, manifest, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
@@ -50,10 +51,9 @@ class DownloadClient(object):
 
     @abc.abstractmethod
     def print_version(self, path):
-        call_args = []
+        call_args = [path, '--version']
         if self.docker:
-            call_args = ['docker', 'run', '-t', '--rm', 'icgc/icgc-get:test']
-        call_args.extend([path, '--version'])
+            call_args = self.prepend_docker_args(call_args)
         self._run_command(call_args, self.version_parser)
 
     @abc.abstractmethod
@@ -103,7 +103,8 @@ class DownloadClient(object):
         json.dump(self.session, open(self.path, 'w', 0777))
 
     def _run_test_command(self, args, forbidden, not_found, env=None, timeout=2):
-        env = dict(os.environ)
+        if not env:
+            env = dict(os.environ)
         env['PATH'] = '/usr/local/bin:' + env['PATH']
         if None in args:
             self.logger.warning("Missing argument in %s", args)
@@ -133,3 +134,14 @@ class DownloadClient(object):
             return 404
         else:
             return 0
+
+    def prepend_docker_args(self, args, mnt=None, envvars=None):
+        docker_args = ['docker', 'run', '-t', '--rm']
+        if not envvars:
+            envvars = {}
+        for name, value in envvars.iteritems():
+            docker_args.extend(['-e', name + '=' + value])
+        if mnt:
+            docker_args.extend(['-v', mnt + ':/icgc/mnt'])
+        docker_args.append(self.docker_version)
+        return docker_args + args

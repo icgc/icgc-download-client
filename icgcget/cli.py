@@ -55,7 +55,7 @@ def logger_setup(logfile):
             logger.addHandler(file_handler)
         except IOError as ex:
             if not ex.errno == 2:
-                print "Unable to write to logfile {}".format(logfile)
+                print("Unable to write to logfile {}".format(logfile))
 
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
