@@ -217,7 +217,7 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
 @cli.command()
 @click.option('--config', '-c', type=click.Path(), default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 def configure(config):
-    dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE, DOCKER_PATHS)
+    dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE)
     dispatch.configure(config, REPOS)
 
 

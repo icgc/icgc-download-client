@@ -97,7 +97,7 @@ def config_parse(filename, default_filename, docker=False, docker_paths=None, em
         config_temp = yaml.safe_load(config_file)
         if config_temp:
             config = flatten_dict(normalize_keys(config_temp))
-            if docker or ('docker' in config and config['docker']):
+            if (docker or ('docker' in config and config['docker'])) and docker_paths:
                 config.update(docker_paths)
             config = {'download': config, 'report': config, 'version': config, 'check': config}
             if 'logfile' in config_temp:
