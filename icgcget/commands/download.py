@@ -71,7 +71,7 @@ class DownloadDispatcher(object):
                     continue
                 file_data[repo][entity["id"]]['fileName'] = copy["fileName"]
                 file_data[repo][entity["id"]]['dataType'] = entity["dataCategorization"]["dataType"]
-                file_data[repo][entity["id"]]['donorId'] = entity["donors"][0]['donorId']
+                file_data[repo][entity["id"]]['donors'] = entity["donors"]
                 file_data[repo][entity["id"]]['fileFormat'] = copy['fileFormat']
                 if "fileName" in copy["indexFile"]:
                     file_data[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]

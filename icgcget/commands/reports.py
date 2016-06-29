@@ -52,7 +52,6 @@ class StatusScreenDispatcher(object):
 
                 data_type = file_id["dataType"]
                 state = search_recursive(file_id["fileName"], output)
-                donor_id = file_id["donorId"]
                 type_sizes = increment_types(data_type, type_sizes, size)
                 type_counts = increment_types(data_type, type_counts, 1)
                 repo_sizes = increment_types(data_type, repo_sizes, size)
@@ -60,9 +59,9 @@ class StatusScreenDispatcher(object):
                 if state:
                     download_count = increment_types(data_type, download_count, 1)
                     repo_download_count = increment_types(data_type, repo_download_count, 1)
-
-                repo_donors = donor_addition(repo_donors, donor_id, data_type)
-                type_donors = donor_addition(type_donors, donor_id, data_type)
+                for donor in file_id['donors']:
+                    repo_donors = donor_addition(repo_donors, donor, data_type)
+                    type_donors = donor_addition(type_donors, donor, data_type)
 
             summary_table = build_table(summary_table, repository, repo_sizes, repo_counts, repo_donors,
                                         repo_download_count, output)
@@ -78,7 +77,10 @@ class StatusScreenDispatcher(object):
             for file_id in file_data[repository]:
                 data = file_data[repository][file_id]
                 size = data["size"]
-
+                if len(data['donors']) > 1:
+                    donor = str(len(data['donors'])) + ' donors'
+                else:
+                    donor = data['donors'][0]['donorId']
                 data_type = data["dataType"]
                 if search_recursive(data["fileName"], output):
                     state = "Yes"
@@ -86,7 +88,7 @@ class StatusScreenDispatcher(object):
                     state = "No"
                 file_size = convert_size(size)
                 file_table.append([file_id, file_size[0], file_size[1], data["fileFormat"],
-                                   data_type, repository, data['donorId'], data["fileName"], state])
+                                   data_type, repository, donor, data["fileName"], state])
 
         self.print_table(headers, file_table, table_format)
 

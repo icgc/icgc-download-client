@@ -75,6 +75,7 @@ class StorageClient(DownloadClient):
             self.logger.info(" ICGC Storage Client %s", version[0])
 
     def download_parser(self, response):
+        response = re.sub(r"\x1b[^m]*m", '', response)
         filename = re.findall(r"\(\w{8}-\w{4}-\w{4}-\w{4}-\w{12}.+", response)
         if filename:
             filename = filename[0][1:-1]

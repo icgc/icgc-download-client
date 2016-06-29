@@ -64,17 +64,22 @@ def logger_setup(logfile):
 
 @click.group()
 @click.option('--config', default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
-@click.option('--docker', '-d', is_flag=True, default=False, envvar='ICGCGET_DOCKER')
+@click.option('--docker', '-d', type=click.BOOL, default=None, envvar='ICGCGET_DOCKER')
 @click.option('--logfile', default=None, envvar='ICGCGET_LOGFILE')
 @click.pass_context
 def cli(ctx, config, docker, logfile):
-    ctx.obj = docker
+
     if ctx.invoked_subcommand != 'configure':
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
         if config != DEFAULT_CONFIG_FILE and not config_file:
             raise click.Abort()
         ctx.default_map = config_file
-
+        if docker is not None:
+            ctx.obj = docker
+        elif 'docker' in config_file:
+            ctx.obj = config_file['docker']
+        else:
+            ctx.obj = True
         if logfile is not None:
             logger_setup(logfile)
         elif 'logfile' in config_file:
@@ -212,7 +217,7 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
 @cli.command()
 @click.option('--config', '-c', type=click.Path(), default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 def configure(config):
-    dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE)
+    dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE, DOCKER_PATHS)
     dispatch.configure(config, REPOS)
 
 

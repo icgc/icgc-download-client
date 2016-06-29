@@ -85,20 +85,25 @@ def config_errors(message, default):
 def config_parse(filename, default_filename, docker=False, docker_paths=None, empty_ok=False):
     default = filename == default_filename
     try:
-        config_text = open(filename, 'r')
+        config_file = open(filename, 'r')
     except IOError as ex:
-        config_text = config_errors("Config file {0} not found: {1}".format(filename, ex.strerror), default)
+        config_errors("Config file {0} not found: {1}".format(filename, ex.strerror), default)
+        if docker:
+            return {'download': docker_paths, 'report': docker_paths, 'version': docker_paths, 'check': docker_paths}
+        else:
+            return {}
     try:
         yaml.SafeLoader.add_constructor("tag:yaml.org,2002:python/unicode", constructor)
-        config_temp = yaml.safe_load(config_text)
+        config_temp = yaml.safe_load(config_file)
         if config_temp:
-            config_download = flatten_dict(normalize_keys(config_temp))
-            if docker:
-                config_download.update(docker_paths)
-            config = {'download': config_download, 'report': config_download, 'version': config_download,
-                      'check': config_download}
+            config = flatten_dict(normalize_keys(config_temp))
+            if docker or ('docker' in config and config['docker']):
+                config.update(docker_paths)
+            config = {'download': config, 'report': config, 'version': config, 'check': config}
             if 'logfile' in config_temp:
                 config['logfile'] = config_temp['logfile']
+            if 'docker' in config_temp:
+                config['docker'] = config_temp['docker']
         elif empty_ok:
             return {}
         else:
