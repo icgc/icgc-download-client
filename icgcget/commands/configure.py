@@ -44,8 +44,8 @@ class ConfigureDispatcher(object):
         logfile = self.prompt('logfile', 'logfile')
         repos = self.prompt('repos', 'repos')
         repos = repos.split(' ')
-        docker = self.prompt('docker', 'docker', input_type=click.BOOL)
         validate_repos(repos, repo_list)
+        docker = self.prompt('docker', 'docker', input_type=click.BOOL)
         conf_yaml = {'output': output, 'logfile': logfile, 'repos': repos, 'docker': docker}
         if "aws-virginia" in repos or "collaboratory" in repos:
             icgc_path = self.prompt('ICGC path', 'icgc_path',

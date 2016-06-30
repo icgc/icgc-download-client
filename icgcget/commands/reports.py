@@ -107,4 +107,4 @@ class StatusScreenDispatcher(object):
                 for i in range(1, len(headers)):
                     line_dict[headers[i]] = line[i]
                 json_dict[line[0]] = line_dict
-            print(json_dict)
+            print json_dict

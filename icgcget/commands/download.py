@@ -38,13 +38,13 @@ from icgcget.commands.utils import api_error_catch, filter_manifest_ids, check_a
 
 
 class DownloadDispatcher(object):
-    def __init__(self, pickle_path=None, docker=False):
+    def __init__(self, json_path=None, docker=False):
         self.logger = logging.getLogger("__log__")
-        self.gdc_client = GdcDownloadClient(pickle_path, docker)
-        self.ega_client = EgaDownloadClient(pickle_path, docker)
-        self.gt_client = GnosDownloadClient(pickle_path, docker)
-        self.pdc_client = PdcDownloadClient(pickle_path, docker)
-        self.icgc_client = StorageClient(pickle_path, docker)
+        self.gdc_client = GdcDownloadClient(json_path, docker)
+        self.ega_client = EgaDownloadClient(json_path, docker)
+        self.gt_client = GnosDownloadClient(json_path, docker)
+        self.pdc_client = PdcDownloadClient(json_path, docker)
+        self.icgc_client = StorageClient(json_path, docker)
 
     def download_manifest(self, repos, file_ids, manifest, output, api_url, verify, unique=False):
         portal = portal_client.IcgcPortalClient(verify)
@@ -69,18 +69,18 @@ class DownloadDispatcher(object):
                     file_data[repo].pop(entity['id'])
                     self.logger.warning("File %s found in download directory, skipping", entity['id'])
                     continue
-                file_data[repo][entity["id"]]['fileName'] = copy["fileName"]
-                file_data[repo][entity["id"]]['dataType'] = entity["dataCategorization"]["dataType"]
-                file_data[repo][entity["id"]]['donors'] = entity["donors"]
-                file_data[repo][entity["id"]]['fileFormat'] = copy['fileFormat']
+                temp_file = {'fileName': copy["fileName"], 'dataType': entity["dataCategorization"]["dataType"],
+                             'donors': entity["donors"], 'fileFormat': copy['fileFormat']}
+
                 if "fileName" in copy["indexFile"]:
-                    file_data[repo][entity["id"]]['index_filename'] = copy["indexFile"]["fileName"]
+                    temp_file['index_filename'] = copy["indexFile"]["fileName"]
                 if repo == 'pdc':
                     file_data[repo][entity['id']]['fileUrl'] = 's3://' + copy['repoDataPath']
                     if unique and search_recursive(copy['repoDataPath'].split('/')[1], output):
                         file_data[repo].pop(entity['id'])
                         self.logger.warning("File %s found in download directory, skipping", entity['id'])
                         continue
+                file_data[repo][entity["id"]].update(temp_file)
         self.size_check(size, output)
         if not flatten_file_data(file_data):
             self.logger.error("All files were found in download directory, aborting")

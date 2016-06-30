@@ -55,7 +55,7 @@ def logger_setup(logfile):
             logger.addHandler(file_handler)
         except IOError as ex:
             if not ex.errno == 2:
-                print("Unable to write to logfile {}".format(logfile))
+                print "Unable to write to logfile {}".format(logfile)
 
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.INFO)
@@ -217,6 +217,10 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
 @cli.command()
 @click.option('--config', '-c', type=click.Path(), default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 def configure(config):
+    default_dir = os.path.split(DEFAULT_CONFIG_FILE)[0]
+    if config == DEFAULT_CONFIG_FILE and not os.path.exists(default_dir):
+        os.umask(0000)
+        os.mkdir(default_dir, 0777)
     dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE)
     dispatch.configure(config, REPOS)
 

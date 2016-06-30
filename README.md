@@ -23,28 +23,10 @@ python setup.py install
 
 Once the installation is complete, ICGC get can be invoked with the command `icgc-get`
 
-ICGC get is also available as a docker container.  Running ICGC get through a 
-docker container will prevent issues from arising related to conflicting 
-software requirements for the data download clients. The docker container will also
-automatically install all supported data clients.
-
-First, install docker from https://docs.docker.com/mac/. Then pull the docker image using the command
-
-```shell
-docker pull icgc/icgc-get
-```
-
-To make working with the container easier, it is recommend to add a bash alias to enable invocation of ICGC get with the command
-`icgc-get`.
-
-```shell
-alias icgc-get="docker run -it --rm -v $MOUNT_DIR:/icgc/mnt icgc/icgc-get --config /icgc/mnt/config.yaml"
-```
-
-replacing `$MOUNT_DIR` with the path to your mounted directory. By default, this directory will be populated by the script with
-process logs and downloaded files. You will also need to save a configuration file in this directory if you wish
-to pass a customized config file to the container. The files will be written with ownership set to the current user (`/usr/bin/id -u`) and group (`/usr/bin/id -g`).
-
+If you do not have any of download clients installed locally, ICGC get is capable of running them through docker. 
+Running any of the clients through a docker container will prevent issues from arising related to conflicting 
+software requirements for the data download clients.  To enable this functionality, first install 
+docker from https://docs.docker.com/mac/.
 
 ## Configuration
 ICGC get is packaged with a default configuration file `config.yaml`, that contains a list of all
@@ -95,7 +77,8 @@ start a series of prompts for you to enter application paths, access credentials
 Any of these prompts can be  bypassed by immediately pressing the enter key if the parameter is not relevant for your
 planned use of ICGC-get.  By default, `configure` will write to the default config file, but the destination can be overwritten with 
 the `-c` tag.  Should there be an existing configuration file at the target destination, existing configuration values can be kept
-by immediately pressing enter in response to the prompt.
+by pressing enter in response to the prompt.  Please note that access tokens, passwords, and secret keys will not be shown on the 
+command prompt for security reasons, but can still be entered and can still be kept as the current value by pressing enter.
 
 
 
@@ -132,11 +115,13 @@ Support for the PDC can be reached at https://bionimbus-pdc.opensciencedatacloud
 
 ## Commands
 
+All commands save `configure` share the `--config` option and the `--docker` option. 
+
 ### `download` command
 
 The syntax for performing a download using ICGC get is
 ```shell
-icgc-get --config [CONFIG] download [REPO] [FILEIDS] [OPTIONS]
+icgc-get --config [CONFIG] --docker [true/false] download [REPO] [FILEIDS] [OPTIONS]
 ```
 
 The first required argument is the ICGC File ids or manifest id corresponding to the file or files you wish to download. 
@@ -253,7 +238,7 @@ icgc-get version
 Sample output:
 
 ```
-ICGC-Get Version: 0.5
+ICGC-Get Version: 0.2.2
 Clients:
  AWS CLI Version:             1.10.34
  EGA Client Version:          2.2.2

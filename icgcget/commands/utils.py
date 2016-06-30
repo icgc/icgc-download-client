@@ -78,7 +78,7 @@ def config_errors(message, default):
     if default:
         return {}
     else:
-        print(message)
+        print message
         raise click.Abort()
 
 
