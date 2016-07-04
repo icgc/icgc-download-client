@@ -37,9 +37,7 @@ class GdcDownloadClient(DownloadClient):
                  password=None):
         call_args = [tool_path, 'download']
         call_args.extend(uuids)
-        access_file = tempfile.NamedTemporaryFile(dir=staging)
-        access_file.file.write(access)
-        access_file.file.seek(0)
+        access_file = self.get_access_file(access, staging)
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
             call_args.extend(['--dir', '/icgc/mnt/', '-n', processes, '--token', access_path])

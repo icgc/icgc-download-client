@@ -57,7 +57,7 @@ class DownloadDispatcher(object):
             file_ids = []
             for repo in file_data:
                 file_ids.extend(file_data[repo].keys())
-
+                self.logger.debug(file_data[repo].keys() + ' found on manifest')
         entities = api_error_catch(self, portal.get_metadata_bulk, file_ids, api_url)
         for entity in entities:
             repo, copy = match_repositories(self, repos, entity)
@@ -81,6 +81,7 @@ class DownloadDispatcher(object):
                         self.logger.warning("File %s found in download directory, skipping", entity['id'])
                         continue
                 file_data[repo][entity["id"]].update(temp_file)
+                self.logger.debug('File %s added to file data under repo %s', entity['id'], repo)
         self.size_check(size, output)
         if not flatten_file_data(file_data):
             self.logger.error("All files were found in download directory, aborting")
@@ -114,7 +115,7 @@ class DownloadDispatcher(object):
         if 'ega' in file_data and file_data['ega']:
             check_access(self, ega_username, 'ega', self.ega_client.docker, ega_path, ega_password, udt=ega_udt)
             if ega_transport_parallel != '1':
-                self.logger.warning("Parallel streams on the ega client may cause reliability issues and failed " +
+                self.logger.warning("Parallel streams on the EGA client may cause reliability issues and failed " +
                                     "downloads.  This option is not recommended.")
             self.ega_client.session = session
             uuids = self.get_uuids(file_data['ega'])

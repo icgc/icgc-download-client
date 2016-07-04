@@ -21,6 +21,8 @@ import abc
 import logging
 import json
 import subprocess
+import tempfile
+import shutil
 import os
 import re
 import subprocess32
@@ -145,3 +147,16 @@ class DownloadClient(object):
             docker_args.extend(['-v', mnt + ':/icgc/mnt'])
         docker_args.append(self.docker_version)
         return docker_args + args
+
+    def get_access_file(self, access, staging):
+        if os.path.isfile(access):
+            if self.docker and os.path.split(access)[1] != staging:
+                access_file = tempfile.NamedTemporaryFile(dir=staging)
+                shutil.copyfile(access, access_file.name)
+            else:
+                access_file = open(access)
+        else:
+            access_file = tempfile.NamedTemporaryFile(dir=staging)
+            access_file.file.write(access)
+            access_file.file.seek(0)
+        return access_file

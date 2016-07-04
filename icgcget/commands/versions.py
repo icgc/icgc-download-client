@@ -43,4 +43,4 @@ def check_version_path(client, name, path):
         if os.path.isfile(path) or client.docker:
             client.print_version(path)
         else:
-            logger.warning(" Path %s to %s client could not be resolved.", path, name)
+            logger.warning(" Path '%s' to %s client could not be resolved.", path, name)

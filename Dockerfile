@@ -90,8 +90,11 @@ RUN mkdir -p /icgc/ega-download-demo && \
 COPY . /icgc/icgcget/
 
 RUN cd /icgc/icgcget && \
+    wget -qO- https://github.com/pyinstaller/pyinstaller/zipball/develop -O temp.zip ; \
+    unzip temp.zip -d /icgc/pyinstaller && \
     apt-get upgrade -y && \
     pip install -U pip setuptools && \
+     pip install -r requirements.txt && \
     pip install awscli && \
     pip uninstall -y pip setuptools
 

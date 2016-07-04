@@ -25,6 +25,7 @@ from icgcget.clients.gdc.gdc_client import GdcDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
 from icgcget.clients.gnos.gnos_client import GnosDownloadClient
+from icgcget.clients.errors import ApiError
 from icgcget.commands.utils import check_access, api_error_catch
 
 
@@ -47,13 +48,19 @@ class AccessCheckDispatcher(object):
 
         if "collaboratory" in repo_list:
             check_access(self, icgc_token, "icgc")
-            self.access_response(icgc_client.access_check(icgc_token, repo="collab", api_url=api_url),
-                                 "Collaboratory.")
+            try:
+                self.access_response(icgc_client.access_check(icgc_token, repo="collab", api_url=api_url),
+                                     "Collaboratory.")
+            except ApiError:
+                self.logger.error("Unable to connect to the ICGC api")
 
         if "aws-virginia" in repo_list:
             check_access(self, icgc_token, "icgc")
-            self.access_response(icgc_client.access_check(icgc_token, repo="aws", api_url=api_url),
-                                 "Amazon Web Server.")
+            try:
+                self.access_response(icgc_client.access_check(icgc_token, repo="aws", api_url=api_url),
+                                     "Amazon Web Server.")
+            except ApiError:
+                self.logger.error("Unable to connect to the ICGC api")
 
         if 'ega' in repo_list:
             check_access(self, ega_username, 'ega', password=ega_password)

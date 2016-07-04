@@ -33,9 +33,7 @@ class GnosDownloadClient(DownloadClient):
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  password=None):
-        access_file = tempfile.NamedTemporaryFile(dir=staging)
-        access_file.file.write(access)
-        access_file.file.seek(0)
+        access_file = self.get_access_file(access, staging)
         call_args = []
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
@@ -50,9 +48,8 @@ class GnosDownloadClient(DownloadClient):
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
-        access_file = tempfile.NamedTemporaryFile(dir=output)
-        access_file.file.write(access)
-        access_file.file.seek(0)
+
+        access_file = self.get_access_file(access, output)
         call_args = []
         if self.docker:
             access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]

@@ -32,7 +32,8 @@ def api_error_catch(self, func, *args):
     try:
         return func(*args)
     except errors.ApiError as ex:
-        self.logger.error(ex.message)
+        messages = ex.message.split(': ')
+        self.logger.error(messages[1] + ': ' + messages[2])
         raise click.Abort
 
 
@@ -52,7 +53,7 @@ def check_access(self, access, name, docker=False, path="Default", password="Def
         self.logger.error("Path to {} download client not provided.".format(name))
         raise click.BadParameter("Please provide a path to the {} download client".format(name))
     if not os.path.isfile(path) and not docker and path != 'Default':
-        self.logger.error("Path {0} to {1} download client cannot be resolved.".format(path, name))
+        self.logger.error("Path '{0}' to {1} download client cannot be resolved.".format(path, name))
         raise click.BadParameter("Please provide a complete path to the {} download client".format(name))
 
 
@@ -87,7 +88,7 @@ def config_parse(filename, default_filename, docker=False, docker_paths=None, em
     try:
         config_file = open(filename, 'r')
     except IOError as ex:
-        config_errors("Config file {0} not found: {1}".format(filename, ex.strerror), default)
+        config_errors("Config file '{0}' not found: {1}".format(filename, ex.strerror), default)
         if docker:
             return {'download': docker_paths, 'report': docker_paths, 'version': docker_paths, 'check': docker_paths}
         else:
@@ -107,14 +108,14 @@ def config_parse(filename, default_filename, docker=False, docker_paths=None, em
         elif empty_ok:
             return {}
         else:
-            config = config_errors("Config file {} is an empty file.".format(filename), default)
+            config = config_errors("Config file '{}' is an empty file.".format(filename), default)
     except yaml.YAMLError:
-        config = config_errors("Failed to parse config file {}.  Config must be in YAML format.".format(filename),
+        config = config_errors("Failed to parse config file '{}'.  Config must be in YAML format.".format(filename),
                                default)
     return config
 
 
-def constructor(loader, node):
+def constructor(node):
     return node.value
 
 
@@ -179,16 +180,17 @@ def override_prompt(override):
 def validate_ids(ids, manifest):
     if manifest:
         if not re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', ids[0]):
-            raise click.BadArgumentUsage(message="Bad Manifest ID: passed argument {} isn't in uuid format".format(ids))
+            raise click.BadArgumentUsage(message="Bad Manifest ID: passed argument" +
+                                                 "'{}' isn't in uuid format".format(ids[0]))
     else:
         for fi_id in ids:
             if not re.findall(r'FI\d*', fi_id):
                 if re.match(r'\w{8}-\w{4}-\w{4}-\w{4}-\w{12}', fi_id):
-                    raise click.BadArgumentUsage(message="Bad FI ID: passed argument {}".format(fi_id) +
+                    raise click.BadArgumentUsage(message="Bad FI ID: passed argument '{}'".format(fi_id) +
                                                  "is in UUID format.  If you intended to use a manifest," +
                                                  "add the -m tag.")
-                raise click.BadArgumentUsage(message="Bad FI ID: passed argument {}".format(fi_id) +
-                                             "isn't in FI00000 format")
+                raise click.BadArgumentUsage(message="Bad FI ID: passed argument '{}'".format(fi_id) +
+                                             " isn't in FI00000 format")
 
 
 def validate_repos(repos, repo_list):
@@ -200,8 +202,8 @@ def validate_repos(repos, repo_list):
             if repo and len(repo) == 1:
                 raise click.BadOptionUsage("Repos need to be entered in list format in config file.")
             elif repo:
-                raise click.BadOptionUsage("Invalid repo {0}.  Valid repositories are: {1}".format(repo,
-                                                                                                   ' '.join(repo_list)))
+                raise click.BadOptionUsage("Invalid repo '{0}'." +
+                                           "Valid repositories are: {1}".format(repo, ' '.join(repo_list)))
         else:
             new_repos.append(repo)
     return new_repos

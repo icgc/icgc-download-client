@@ -32,7 +32,7 @@ from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load
 from icgcget.commands.configure import ConfigureDispatcher
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
-REPOS = ['collaboratory', 'aws-virginia', 'ega', 'gdc', 'cghub', 'pdc']
+REPOS = ['aws-virginia', 'collaboratory', 'gdc', 'pdc', 'ega', 'cghub']
 VERSION = '0.2.2'
 API_URL = "https://staging.dcc.icgc.org/api/v1/"
 DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client',
@@ -41,7 +41,7 @@ DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client'
                 'gdc_path': '/icgc/gdc-data-transfer-tool/gdc-client'}
 
 
-def logger_setup(logfile):
+def logger_setup(logfile, verbose):
     logger = logging.getLogger('__log__')
     logger.setLevel(logging.DEBUG)
 
@@ -55,10 +55,13 @@ def logger_setup(logfile):
             logger.addHandler(file_handler)
         except IOError as ex:
             if not ex.errno == 2:
-                print "Unable to write to logfile {}".format(logfile)
+                print "Unable to write to logfile '{}'".format(logfile)
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
+    if verbose:
+        stream_handler.setLevel(logging.DEBUG)
+    else:
+        stream_handler.setLevel(logging.INFO)
     logger.addHandler(stream_handler)
 
 
@@ -66,8 +69,9 @@ def logger_setup(logfile):
 @click.option('--config', default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 @click.option('--docker', '-d', type=click.BOOL, default=None, envvar='ICGCGET_DOCKER')
 @click.option('--logfile', default=None, envvar='ICGCGET_LOGFILE')
+@click.option('--verbose', '-v', is_flag=True, default=False, help="Do not verify ssl certificates")
 @click.pass_context
-def cli(ctx, config, docker, logfile):
+def cli(ctx, config, docker, logfile, verbose):
 
     if ctx.invoked_subcommand != 'configure':
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
@@ -81,15 +85,15 @@ def cli(ctx, config, docker, logfile):
         else:
             ctx.obj = True
         if logfile is not None:
-            logger_setup(logfile)
+            logger_setup(logfile, verbose)
         elif 'logfile' in config_file:
-            logger_setup(config_file['logfile'])
+            logger_setup(config_file['logfile'], verbose)
         else:
-            logger_setup(None)
+            logger_setup(None, verbose)
 
 
 @cli.command()
-@click.argument('ids', nargs=-1, required=True)
+@click.argument('IDS', nargs=-1, required=True)
 @click.option('--repos', '-r', multiple=True)
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
@@ -152,7 +156,7 @@ def download(ctx, ids, repos, manifest, output,
 
 
 @cli.command()
-@click.argument('ids', nargs=-1, required=False)
+@click.argument('IDS', nargs=-1, required=False)
 @click.option('--repos', '-r', multiple=True)
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
@@ -185,7 +189,7 @@ def report(repos, ids, manifest, output, table_format, data_type, no_ssl_verify)
 
 
 @cli.command()
-@click.argument('ids', nargs=-1, required=False)
+@click.argument('IDS', nargs=-1, required=False)
 @click.option('--repos', '-r', multiple=True)
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
