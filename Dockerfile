@@ -71,6 +71,13 @@ RUN mkdir -p /icgc/ega-download-demo && \
     tar xvz --strip-components 1 && \
     mkdir -p /icgc/icgc-storage-client/logs && \
 
+RUN mkdir -p /icgc/gdc-data-transfer-tool && \
+    cd /icgc/gdc-data-transfer-tool && \ 
+    wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-clientv07ubuntu1404x64_1.zip -O temp.zip ; \
+    unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
+    rm temp.zip
+ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
+
 #
 # Install latest version of gdc download tool
 #
