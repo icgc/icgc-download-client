@@ -24,11 +24,12 @@ from icgcget.clients.gdc.gdc_client import GdcDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
 from icgcget.clients.gnos.gnos_client import GnosDownloadClient
+from icgcget.clients.version import __version__
 
 
-def versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, docker, version_num):
+def versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, docker):
     logger = logging.getLogger("__log__")
-    logger.warning("ICGC-Get Version: %s", version_num)
+    logger.warning("ICGC-Get Version: %s", __version__)
     logger.warning("Clients:")
     check_version_path(PdcDownloadClient(docker=docker), "PDC", pdc_path)
     check_version_path(EgaDownloadClient(docker=docker), "EGA", ega_path)

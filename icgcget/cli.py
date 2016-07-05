@@ -33,7 +33,6 @@ from icgcget.commands.configure import ConfigureDispatcher
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
 REPOS = ['aws-virginia', 'collaboratory', 'gdc', 'pdc', 'ega', 'cghub']
-VERSION = '0.2.2'
 API_URL = "https://staging.dcc.icgc.org/api/v1/"
 DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client',
                 'ega_path': '/icgc/ega-download-demo/EgaDemoClient.jar',
@@ -237,7 +236,7 @@ def configure(config):
 @click.option('--pdc-path', envvar='ICGCGET_PDC_PATH')
 @click.pass_context
 def version(ctx, cghub_path, ega_path, gdc_path, icgc_path, pdc_path):
-    versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj, VERSION)
+    versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj)
     return 0
 
 

@@ -17,10 +17,11 @@
 #
 
 from setuptools import setup, find_packages
+from icgcget.clients.version import __version__
 
 
 setup(name='icgcget',
-      version='0.0.3',
+      version=__version__,
       description='Universal download client for ICGC data residing in various environments',
       url="https://github.com/icgc/icgc-get",
       packages=find_packages(exclude=['tests']),
