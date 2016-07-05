@@ -94,7 +94,7 @@ RUN cd /icgc/icgcget && \
     unzip temp.zip -d /icgc/pyinstaller && \
     apt-get upgrade -y && \
     pip install -U pip setuptools && \
-     pip install -r requirements.txt && \
+    pip install -r requirements.txt && \
     pip install awscli && \
     pip uninstall -y pip setuptools
 

@@ -72,13 +72,7 @@ All clients require an absolute path to your local client installation under rep
 data streams to use when downloading under `repo:   transport:   parallel` or `REPO_TRANSPORT_PARALLEL`
 Most clients can be made to download using the UDT protocol by using the `repo:   udt` config option.
 
-To more easily create a properly formatted configuration file, you can use the `configure` command.  This will 
-start a series of prompts for you to enter application paths, access credentials, output directories and logfile locations.
-Any of these prompts can be  bypassed by immediately pressing the enter key if the parameter is not relevant for your
-planned use of ICGC-get.  By default, `configure` will write to the default config file, but the destination can be overwritten with 
-the `-c` tag.  Should there be an existing configuration file at the target destination, existing configuration values can be kept
-by pressing enter in response to the prompt.  Please note that access tokens, passwords, and secret keys will not be shown on the 
-command prompt for security reasons, but can still be entered and can still be kept as the current value by pressing enter.
+To more easily create a properly formatted configuration file, you can use the `configure` command, as described below.  
 
 
 
@@ -121,7 +115,7 @@ All commands save `configure` share the `--config` option and the `--docker` opt
 
 The syntax for performing a download using ICGC get is
 ```shell
-icgc-get --config [CONFIG] --docker [true/false] download [REPO] [FILEIDS] [OPTIONS]
+icgc-get --config [CONFIG] --docker [true|false] download [REPO] [FILEIDS] [OPTIONS]
 ```
 
 The first required argument is the ICGC File ids or manifest id corresponding to the file or files you wish to download. 
@@ -198,6 +192,15 @@ Sample output:
 │ Total: StGV          │ 197.44 │ KB     │            1 │             1 │
 ╘══════════════════════╧════════╧════════╧══════════════╧═══════════════╛
 ```
+
+### `configure` command
+
+This command will start a series of prompts for you to enter application paths, access credentials, output directories and logfile locations.
+Any of these prompts can be  bypassed by immediately pressing the enter key if the parameter is not relevant for your planned use 
+of ICGC-get.  By default, `configure` will write to the default config file, but the destination can be overwritten with 
+the `-c` tag.  Should there be an existing configuration file at the target destination, existing configuration values can be kept
+by pressing enter in response to the prompt.  Please note that access tokens, passwords, and secret keys will not be shown on the 
+command prompt for security reasons, but can still be entered and can still be kept as the current value by pressing enter.  
 
 ### `check` command
 
