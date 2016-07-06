@@ -75,10 +75,11 @@ def flatten_dict(dictionary, parent_key='', sep='_'):
     items = []
     for key, value in dictionary.items():
         new_key = parent_key + sep + key if parent_key else key
-        if isinstance(value, collections.MutableMapping):
-            items.extend(flatten_dict(value, new_key, sep=sep).items())
+        new_value = None if value == '' else value
+        if isinstance(new_value, collections.MutableMapping):
+            items.extend(flatten_dict(new_value, new_key, sep=sep).items())
         else:
-            items.append((new_key, value))
+            items.append((new_key, new_value))
     return dict(items)
 
 

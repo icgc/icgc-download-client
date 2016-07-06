@@ -23,6 +23,7 @@ import re
 
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.portal_client import call_api
+from icgcget.clients.errors import ApiError
 
 
 class StorageClient(DownloadClient):
@@ -37,7 +38,7 @@ class StorageClient(DownloadClient):
 
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
-        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
+        call_args = [tool_path, '--profile',  repo,  'download', '--object-id']
         call_args.extend(uuids)
         if repo == 'collab':
             self.repo = 'collaboratory'
@@ -45,7 +46,7 @@ class StorageClient(DownloadClient):
             self.repo = 'aws-virginia'
         if self.docker:
             call_args.extend(['--output-dir', '/icgc/mnt'])
-            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes}
+            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_LEVEL_': 'DEBUG'}
             call_args = self.prepend_docker_args(call_args, staging, envvars)
         else:
             env_dict['ACCESSTOKEN'] = access
@@ -56,7 +57,12 @@ class StorageClient(DownloadClient):
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
         request = api_url + 'settings/tokens/' + access
-        resp = call_api(request, verify=self.verify)
+        try:
+            resp = call_api(request, verify=self.verify)
+        except ApiError as ex:
+            if ex.code == 400:
+                return False
+            raise ApiError(ex.request_string, ex.message, ex.code)
         match = repo + ".download"
         return match in resp["scope"]
 
@@ -78,4 +84,4 @@ class StorageClient(DownloadClient):
         if filename:
             filename = filename[0][1:-1]
             self.session_update(filename, self.repo)
-        self.logger.info(response)
+        self.logger.info(response.strip())

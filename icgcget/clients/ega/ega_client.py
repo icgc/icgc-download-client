@@ -119,7 +119,7 @@ class EgaDownloadClient(DownloadClient):
         if filename:
             filename = filename[0][1:-7]
             self.session_update(filename, 'ega')
-        self.logger.info(response)
+        self.logger.info(response.strip())
 
     def requests_parser(self, response):
         self.logger.info(response)

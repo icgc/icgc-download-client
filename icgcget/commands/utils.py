@@ -193,17 +193,11 @@ def validate_ids(ids, manifest):
                                              " isn't in FI00000 format")
 
 
-def validate_repos(repos, repo_list):
+def filter_repos(repos):
     if not repos or repos.count(None) == len(repos):
         raise click.BadOptionUsage("Must include prioritized repositories")
     new_repos = []
     for repo in repos:
-        if repo not in repo_list:
-            if repo and len(repo) == 1:
-                raise click.BadOptionUsage("Repos need to be entered in list format in config file.")
-            elif repo:
-                raise click.BadOptionUsage("Invalid repo '{0}'." +
-                                           "Valid repositories are: {1}".format(repo, ' '.join(repo_list)))
-        else:
+        if repo:
             new_repos.append(repo)
     return new_repos

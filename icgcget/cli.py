@@ -24,11 +24,13 @@ import sys
 import json
 import click
 
+from icgcget.clients.version import __version__
+from icgcget.clients.click_repo import RepoParamType, Logfile
 from icgcget.commands.versions import versions_command
 from icgcget.commands.reports import StatusScreenDispatcher
 from icgcget.commands.download import DownloadDispatcher
 from icgcget.commands.access_checks import AccessCheckDispatcher
-from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, validate_repos
+from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, filter_repos
 from icgcget.commands.configure import ConfigureDispatcher
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
@@ -38,6 +40,7 @@ DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client'
                 'ega_path': '/icgc/ega-download-demo/EgaDemoClient.jar',
                 'cghub_path': '/icgc/genetorrent/bin/gtdownload', 'pdc_path': '/usr/local/bin/aws',
                 'gdc_path': '/icgc/gdc-data-transfer-tool/gdc-client'}
+LOGGER = None
 
 
 def logger_setup(logfile, verbose):
@@ -46,9 +49,9 @@ def logger_setup(logfile, verbose):
 
     if logfile:
         try:
-            open(logfile, 'w+')
+            open(logfile, 'a')
             formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            file_handler = logging.FileHandler(logfile)
+            file_handler = logging.FileHandler(logfile, mode='a')
             file_handler.setLevel(logging.DEBUG)
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
@@ -62,17 +65,19 @@ def logger_setup(logfile, verbose):
     else:
         stream_handler.setLevel(logging.INFO)
     logger.addHandler(stream_handler)
+    return logger
 
 
 @click.group()
 @click.option('--config', default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 @click.option('--docker', '-d', type=click.BOOL, default=None, envvar='ICGCGET_DOCKER')
-@click.option('--logfile', default=None, envvar='ICGCGET_LOGFILE')
+@click.option('--logfile', default=None, type=Logfile(), envvar='ICGCGET_LOGFILE')
 @click.option('--verbose', '-v', is_flag=True, default=False, help="Do not verify ssl certificates")
 @click.pass_context
 def cli(ctx, config, docker, logfile, verbose):
 
     if ctx.invoked_subcommand != 'configure':
+        global LOGGER
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
         if config != DEFAULT_CONFIG_FILE and not config_file:
             raise click.Abort()
@@ -84,16 +89,17 @@ def cli(ctx, config, docker, logfile, verbose):
         else:
             ctx.obj = True
         if logfile is not None:
-            logger_setup(logfile, verbose)
+            LOGGER = logger_setup(logfile, verbose)
         elif 'logfile' in config_file:
-            logger_setup(config_file['logfile'], verbose)
+            LOGGER = logger_setup(config_file['logfile'], verbose)
         else:
-            logger_setup(None, verbose)
+            LOGGER = logger_setup(None, verbose)
+        LOGGER.debug(__version__ + ' ' + ctx.invoked_subcommand)
 
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=True)
-@click.option('--repos', '-r', multiple=True)
+@click.option('--repos', '-r', multiple=True, type=RepoParamType())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               required=True, envvar='ICGCGET_OUTPUT')
@@ -127,8 +133,10 @@ def download(ctx, ids, repos, manifest, output,
              gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
              pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
-    repos = validate_repos(repos, REPOS)
+    global LOGGER
+    LOGGER.debug(str(ctx.params))
     staging = output + '/.staging'
+    filter_repos(repos)
     if not os.path.exists(staging):
         os.umask(0000)
         os.mkdir(staging, 0777)
@@ -156,15 +164,18 @@ def download(ctx, ids, repos, manifest, output,
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=False)
-@click.option('--repos', '-r', multiple=True)
+@click.option('--repos', '-r', multiple=True, type=RepoParamType())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               envvar='ICGCGET_OUTPUT')
 @click.option('--table-format', '-f', type=click.Choice(['tsv', 'pretty', 'json']), default='pretty')
 @click.option('--data-type', '-t', type=click.Choice(['file', 'summary']), default='file')
 @click.option('--no-ssl-verify', is_flag=True, default=True, help="Do not verify ssl certificates")
-def report(repos, ids, manifest, output, table_format, data_type, no_ssl_verify):
-    repos = validate_repos(repos, REPOS)
+@click.pass_context
+def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_verify):
+    global LOGGER
+    LOGGER.debug(str(ctx.params))
+    filter_repos(repos)
     json_path = None
     download_session = None
     if output:
@@ -189,7 +200,7 @@ def report(repos, ids, manifest, output, table_format, data_type, no_ssl_verify)
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=False)
-@click.option('--repos', '-r', multiple=True)
+@click.option('--repos', '-r', multiple=True, type=RepoParamType())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               envvar='ICGCGET_OUTPUT')
@@ -206,7 +217,9 @@ def report(repos, ids, manifest, output, table_format, data_type, no_ssl_verify)
 @click.pass_context
 def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
           icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
-    repos = validate_repos(repos, REPOS)
+    global LOGGER
+    LOGGER.debug(str(ctx.params))
+    filter_repos(repos)
     dispatch = AccessCheckDispatcher()
     download_dispatch = DownloadDispatcher()
     download_session = {'file_data': {}}
@@ -225,7 +238,7 @@ def configure(config):
         os.umask(0000)
         os.mkdir(default_dir, 0777)
     dispatch = ConfigureDispatcher(config, DEFAULT_CONFIG_FILE)
-    dispatch.configure(config, REPOS)
+    dispatch.configure(config)
 
 
 @cli.command()
@@ -236,6 +249,8 @@ def configure(config):
 @click.option('--pdc-path', envvar='ICGCGET_PDC_PATH')
 @click.pass_context
 def version(ctx, cghub_path, ega_path, gdc_path, icgc_path, pdc_path):
+    global LOGGER
+    LOGGER.debug(str(ctx.params))
     versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj)
     return 0
 

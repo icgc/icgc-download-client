@@ -19,7 +19,6 @@
 #
 
 import re
-import tempfile
 import os
 from icgcget.clients.errors import ApiError
 from icgcget.clients.download_client import DownloadClient
@@ -76,4 +75,4 @@ class GdcDownloadClient(DownloadClient):
         if file_id:
             file_id = file_id[8:-8]
             self.session_update(file_id, 'gdc')
-        self.logger.info(response)
+        self.logger.info(response.strip())

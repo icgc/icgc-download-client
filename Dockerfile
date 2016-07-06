@@ -49,8 +49,7 @@ RUN mkdir -p /icgc/ega-download-demo && \
     apt-get install -y unzip curl wget && \
     cd /icgc/ega-download-demo && \
     wget -qO- https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/files/documents/EgaDemoClient_$EGA_VERSION.zip -O temp.zip ; \
-    unzip temp.zip -d /icgc/ega-download-demo; \
-    rm temp.zip && \
+    unzip temp.zip -d /icgc/ega-download-demo; rm temp.zip && \
 
 #
 # Install GeneTorrent and add to PATH
@@ -71,12 +70,8 @@ RUN mkdir -p /icgc/ega-download-demo && \
     tar xvz --strip-components 1 && \
     mkdir -p /icgc/icgc-storage-client/logs && \
 
-RUN mkdir -p /icgc/gdc-data-transfer-tool && \
-    cd /icgc/gdc-data-transfer-tool && \ 
-    wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-clientv07ubuntu1404x64_1.zip -O temp.zip ; \
-    unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
-    rm temp.zip
-ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
+
+
 
 #
 # Install latest version of gdc download tool
@@ -88,7 +83,7 @@ ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
     rm temp.zip && \
     cd /icgc
-
+ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
 
 #
 # Set working directory for convenience with interactive usage
@@ -101,7 +96,7 @@ RUN cd /icgc/icgcget && \
     unzip temp.zip -d /icgc/pyinstaller && \
     apt-get upgrade -y && \
     pip install -U pip setuptools && \
-    pip install -r requirements.txt && \
+#    pip install -r requirements.txt && \
     pip install awscli && \
     pip uninstall -y pip setuptools
 

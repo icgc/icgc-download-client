@@ -20,19 +20,22 @@
 import os
 import yaml
 import click
-from icgcget.commands.utils import config_parse, validate_repos
+from icgcget.commands.utils import config_parse
+from icgcget.clients.click_repo import ReposParamType, Logfile
 
 
 class ConfigureDispatcher(object):
 
     def __init__(self, config_destination, default):
         self.old_config = {}
+        self.default_dir = os.path.split(default)[0]
+
         if os.path.isfile(config_destination):
             old_config = config_parse(config_destination, default, empty_ok=True)
             if old_config:
                 self.old_config = old_config['report']
 
-    def configure(self, config_destination, repo_list):
+    def configure(self, config_destination):
         config_directory = os.path.split(config_destination)
         if not os.path.isdir(config_directory[0]):
             raise click.BadOptionUsage("Unable to write to directory {}".format(config_directory[0]))
@@ -44,12 +47,10 @@ class ConfigureDispatcher(object):
         output = self.prompt('output', 'output', message, input_type=click.Path(exists=True, writable=True,
                                                                                 file_okay=False, resolve_path=True))
         message = "Enter a location for the process logs to be stored.  Must be in an existing directory.  Optional."
-        logfile = self.prompt('logfile', 'logfile', message)
+        logfile = self.prompt('logfile', 'logfile', message, input_type=Logfile())
         message = "Enter which repositories you want to download from.\n" + \
                   "Valid repositories are: aws-virginia cghub collaboratory ega gdc pdc"
-        repos = self.prompt('repos', 'repos', message)
-        repos = repos.split(' ')
-        validate_repos(repos, repo_list)
+        repos = self.prompt('repos', 'repos', message, input_type=ReposParamType())
         message = "Enter true or false if you wish to use a docker container to download and run all download clients"
         docker = self.prompt('docker', 'docker', message, input_type=click.BOOL)
         conf_yaml = {'output': output, 'logfile': logfile, 'repos': repos, 'docker': docker}
@@ -100,13 +101,16 @@ class ConfigureDispatcher(object):
         print "Configuration file saved to {}".format(config_file.name)
 
     def prompt(self, value_string, value_name, info, input_type=click.STRING, hide=False, skip=False):
-        if value_name in self.old_config:
+        if value_name in self.old_config and self.old_config[value_name]:
             if value_name == 'repos':
                 default = ' '.join(self.old_config[value_name])
             else:
                 default = self.old_config[value_name]
         else:
-            default = ''
+            if value_name == 'logfile':
+                default = self.default_dir + '/logfile.log'
+            else:
+                default = ''
         if skip:
             return default
         print '\n' + info

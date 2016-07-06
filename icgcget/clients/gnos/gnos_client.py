@@ -19,7 +19,6 @@
 #
 
 import re
-import tempfile
 import os
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.errors import SubprocessError
@@ -80,7 +79,7 @@ class GnosDownloadClient(DownloadClient):
             self.logger.info(" Gtdownload Version:          %s", version)
 
     def download_parser(self, response):
-        self.logger.info(response)
+        self.logger.info(response.strip())
         filename = re.findall(r'filename=*', response)
         if filename:
             filename = filename[9:]
