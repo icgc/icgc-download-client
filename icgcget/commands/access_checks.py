@@ -66,31 +66,28 @@ class AccessCheckDispatcher(object):
             check_access(self, ega_username, 'ega', password=ega_password)
             self.access_response(ega_client.access_check(ega_username, password=ega_password), "EGA.")
 
-        if 'gdc' in repo_list:
-            if self.id_check('gdc', self.gdc_ids):
-                check_access(self, gdc_token, 'gdc')
-                gdc_result = api_error_catch(self, gdc_client.access_check, gdc_token, self.gdc_ids)
-                self.access_response(gdc_result, "GDC files specified.")
+        if 'gdc' in repo_list and self.id_check('gdc', self.gdc_ids):
+            check_access(self, gdc_token, 'gdc')
+            gdc_result = api_error_catch(self, gdc_client.access_check, gdc_token, self.gdc_ids)
+            self.access_response(gdc_result, "GDC files specified.")
 
-        if 'cghub' in repo_list:
-            if self.id_check('cghub', self.cghub_ids):
-                check_access(self, cghub_key, 'cghub', gt_client.docker, cghub_path)
-                try:
-                    self.access_response(gt_client.access_check(cghub_key, self.cghub_ids, cghub_path,
-                                                                output=output), "CGHub files.")
-                except SubprocessError as ex:
-                    self.logger.error(ex.message)
-                    raise click.Abort
+        if 'cghub' in repo_list and self.id_check('cghub', self.cghub_ids):
+            check_access(self, cghub_key, 'cghub', gt_client.docker, cghub_path)
+            try:
+                self.access_response(gt_client.access_check(cghub_key, self.cghub_ids, cghub_path,
+                                                            output=output), "CGHub files.")
+            except SubprocessError as ex:
+                self.logger.error(ex.message)
+                raise click.Abort
 
-        if 'pdc' in repo_list:
-            if self.id_check('pdc', self.pdc_urls):
-                check_access(self, pdc_key, 'pdc', pdc_path, secret_key=pdc_secret_key)
-                try:
-                    self.access_response(pdc_client.access_check(pdc_key, self.pdc_urls, pdc_path, output=output,
-                                                                 secret_key=pdc_secret_key), "PDC files.")
-                except SubprocessError as ex:
-                    self.logger.error(ex.message)
-                    raise click.Abort
+        if 'pdc' in repo_list and self.id_check('pdc', self.pdc_urls):
+            check_access(self, pdc_key, 'pdc', pdc_path, secret_key=pdc_secret_key)
+            try:
+                self.access_response(pdc_client.access_check(pdc_key, self.pdc_urls, pdc_path, output=output,
+                                                             secret_key=pdc_secret_key), "PDC files.")
+            except SubprocessError as ex:
+                self.logger.error(ex.message)
+                raise click.Abort
 
     def access_response(self, result, repo):
         if result:
