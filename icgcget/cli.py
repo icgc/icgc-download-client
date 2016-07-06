@@ -40,7 +40,6 @@ DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client'
                 'ega_path': '/icgc/ega-download-demo/EgaDemoClient.jar',
                 'cghub_path': '/icgc/genetorrent/bin/gtdownload', 'pdc_path': '/usr/local/bin/aws',
                 'gdc_path': '/icgc/gdc-data-transfer-tool/gdc-client'}
-LOGGER = None
 
 
 def logger_setup(logfile, verbose):
@@ -77,7 +76,6 @@ def logger_setup(logfile, verbose):
 def cli(ctx, config, docker, logfile, verbose):
 
     if ctx.invoked_subcommand != 'configure':
-        global LOGGER
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
         if config != DEFAULT_CONFIG_FILE and not config_file:
             raise click.Abort()
@@ -89,12 +87,12 @@ def cli(ctx, config, docker, logfile, verbose):
         else:
             ctx.obj = True
         if logfile is not None:
-            LOGGER = logger_setup(logfile, verbose)
+            logger = logger_setup(logfile, verbose)
         elif 'logfile' in config_file:
-            LOGGER = logger_setup(config_file['logfile'], verbose)
+            logger = logger_setup(config_file['logfile'], verbose)
         else:
-            LOGGER = logger_setup(None, verbose)
-        LOGGER.debug(__version__ + ' ' + ctx.invoked_subcommand)
+            logger = logger_setup(None, verbose)
+        logger.debug(__version__ + ' ' + ctx.invoked_subcommand)
 
 
 @cli.command()
@@ -133,8 +131,8 @@ def download(ctx, ids, repos, manifest, output,
              gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
              icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
              pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
-    global LOGGER
-    LOGGER.debug(str(ctx.params))
+    logger = logging.getLogger('__log__')
+    logger.debug(str(ctx.params))
     staging = output + '/.staging'
     filter_repos(repos)
     if not os.path.exists(staging):
@@ -173,8 +171,8 @@ def download(ctx, ids, repos, manifest, output,
 @click.option('--no-ssl-verify', is_flag=True, default=True, help="Do not verify ssl certificates")
 @click.pass_context
 def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_verify):
-    global LOGGER
-    LOGGER.debug(str(ctx.params))
+    logger = logging.getLogger('__log__')
+    logger.debug(str(ctx.params))
     filter_repos(repos)
     json_path = None
     download_session = None
@@ -217,8 +215,8 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_ve
 @click.pass_context
 def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username, ega_password, gdc_token,
           icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
-    global LOGGER
-    LOGGER.debug(str(ctx.params))
+    logger = logging.getLogger('__log__')
+    logger.debug(str(ctx.params))
     filter_repos(repos)
     dispatch = AccessCheckDispatcher()
     download_dispatch = DownloadDispatcher()
