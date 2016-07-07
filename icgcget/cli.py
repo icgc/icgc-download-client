@@ -32,7 +32,7 @@ from icgcget.commands.reports import StatusScreenDispatcher
 from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, filter_repos
 from icgcget.commands.versions import versions_command
 from icgcget.params import RepoParam, LogfileParam
-from icgcget.version import __version__
+from icgcget.version import __version__, __container_version__
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
 API_URL = "https://staging.dcc.icgc.org/api/v1/"
@@ -70,11 +70,10 @@ def logger_setup(logfile, verbose):
 @click.group()
 @click.option('--config', default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 @click.option('--docker', '-d', type=click.BOOL, default=None, envvar='ICGCGET_DOCKER')
-@click.option('--logfile', default=None, type=LogfileParam(), envvar='ICGCGET_LOGFILE')
+@click.option('--logfile', type=LogfileParam(), default=None, envvar='ICGCGET_LOGFILE')
 @click.option('--verbose', '-v', is_flag=True, default=False, help="Do not verify ssl certificates")
 @click.pass_context
 def cli(ctx, config, docker, logfile, verbose):
-
     if ctx.invoked_subcommand != 'configure':
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
         if config != DEFAULT_CONFIG_FILE and not config_file:
@@ -141,7 +140,7 @@ def download(ctx, ids, repos, manifest, output,
     json_path = staging + '/state.json'
 
     old_download_session = load_json(json_path)
-    dispatch = DownloadDispatcher(json_path, ctx.obj, ctx.default_map['logfile'])
+    dispatch = DownloadDispatcher(json_path, ctx.obj, ctx.default_map['logfile'], __container_version__)
     if old_download_session and ids == old_download_session['command']:
         download_session = old_download_session
     else:
@@ -184,7 +183,7 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_ve
 
     if ids and not download_session:
         validate_ids(ids, manifest)
-        download_dispatch = DownloadDispatcher(json_path)
+        download_dispatch = DownloadDispatcher(json_path, container_version=__container_version__)
         download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
 
     dispatch = StatusScreenDispatcher()
@@ -219,7 +218,7 @@ def check(ctx, repos, ids, manifest, output, cghub_key, cghub_path, ega_username
     logger.debug(str(ctx.params))
     filter_repos(repos)
     dispatch = AccessCheckDispatcher()
-    download_dispatch = DownloadDispatcher()
+    download_dispatch = DownloadDispatcher(__container_version__)
     download_session = {'file_data': {}}
     if ('gdc' in repos or 'ega' in repos or 'pdc' in repos) and ids:
         download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
@@ -249,7 +248,7 @@ def configure(config):
 def version(ctx, cghub_path, ega_path, gdc_path, icgc_path, pdc_path):
     logger = logging.getLogger('__log__')
     logger.debug(str(ctx.params))
-    versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj)
+    versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj, __container_version__)
     return 0
 
 

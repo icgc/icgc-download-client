@@ -28,8 +28,8 @@ from icgcget.clients.portal_client import call_api
 
 class GdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, verify=True, log_dir=False):
-        super(GdcDownloadClient, self).__init__(json_path, docker, log_dir)
+    def __init__(self, json_path=None, docker=False, verify=True, log_dir=None, container_version=''):
+        super(GdcDownloadClient, self).__init__(json_path, docker, log_dir, container_version=container_version)
         self.repo = 'gdc'
         self.verify = verify
 

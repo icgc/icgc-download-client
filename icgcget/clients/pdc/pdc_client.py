@@ -26,8 +26,8 @@ from icgcget.clients.download_client import DownloadClient
 
 class PdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, log_dir=None):
-        super(PdcDownloadClient, self).__init__(json_path, docker, log_dir)
+    def __init__(self, json_path=None, docker=False, log_dir=None, container_version=''):
+        super(PdcDownloadClient, self).__init__(json_path, docker, log_dir, container_version=container_version)
         self.repo = 'pdc'
         self.url = '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/'
 

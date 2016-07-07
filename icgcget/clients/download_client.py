@@ -32,7 +32,7 @@ class DownloadClient(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __init__(self, json_path=None, docker=False, log_dir=None):
+    def __init__(self, json_path=None, docker=False, log_dir=None, container_version=""):
 
         self.logger = logging.getLogger('__log__')
         self.jobs = []
@@ -42,7 +42,7 @@ class DownloadClient(object):
         self.docker = docker
         self.repo = ''
         self.docker_mnt = '/icgc/mnt'
-        self.docker_version = 'icgc/icgc-get:0.3.1'
+        self.docker_version = 'icgc/icgc-get:' + container_version
 
     @abc.abstractmethod
     def download(self, manifest, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,

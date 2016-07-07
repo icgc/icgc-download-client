@@ -33,8 +33,8 @@ from icgcget.clients.portal_client import call_api
 
 class EgaDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, verify=True):
-        super(EgaDownloadClient, self) .__init__(json_path, docker)
+    def __init__(self, json_path=None, docker=False, verify=True, container_version=''):
+        super(EgaDownloadClient, self) .__init__(json_path, docker, container_version=container_version)
         self.repo = 'ega'
         self.verify = verify
         self.label = ''

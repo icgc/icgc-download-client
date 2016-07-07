@@ -27,8 +27,8 @@ from icgcget.clients.errors import SubprocessError
 
 class GnosDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, log_dir=None):
-        super(GnosDownloadClient, self).__init__(json_path, docker, log_dir)
+    def __init__(self, json_path=None, docker=False, log_dir=None, container_version=''):
+        super(GnosDownloadClient, self).__init__(json_path, docker, log_dir, container_version=container_version)
         self.repo = 'cghub'
         self.log_name = '/gnos_log.log'
 
@@ -43,7 +43,7 @@ class GnosDownloadClient(DownloadClient):
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
         access_file = self.get_access_file(access, output)
-        call_args = self.make_call_args(path, output, access, uuids)
+        call_args = self.make_call_args(path, output, access_file, uuids)
         result = self._run_test_command(call_args, "403 Forbidden", "404 Not Found")
         if self.docker:
             shutil.move(output + '/gnos_log', self.log_dir + '/gnos_log')
@@ -76,7 +76,7 @@ class GnosDownloadClient(DownloadClient):
         log_name = '/gnos_log.log'
         logfile = self.log_dir + log_name
         if self.docker:
-            access_path = self.docker_mnt + '/.staging/' + os.path.split(access_file.name)[1]
+            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
             # Client needs to be run using sh to be able to download files in docker container.
             call_args = ['/bin/sh', '-c', tool_path + ' -vv' + ' -d ' + ' '.join(uuids) + ' -c ' + access_path +
                          ' -p ' + self.docker_mnt + ' -l ' + self.docker_mnt + log_name]

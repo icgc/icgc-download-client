@@ -38,14 +38,14 @@ from icgcget.commands.utils import api_error_catch, filter_manifest_ids, check_a
 
 
 class DownloadDispatcher(object):
-    def __init__(self, json_path=None, docker=False, logfile=None):
+    def __init__(self, json_path=None, docker=False, logfile=None, container_version=''):
         log_dir = os.path.split(logfile)[0] if logfile else None
         self.logger = logging.getLogger("__log__")
-        self.gdc_client = GdcDownloadClient(json_path, docker, log_dir=log_dir)
-        self.ega_client = EgaDownloadClient(json_path, docker, log_dir)
-        self.gt_client = GnosDownloadClient(json_path, docker, log_dir)
-        self.pdc_client = PdcDownloadClient(json_path, docker, log_dir)
-        self.icgc_client = StorageClient(json_path, docker, log_dir=log_dir)
+        self.gdc_client = GdcDownloadClient(json_path, docker, log_dir=log_dir, container_version=container_version)
+        self.ega_client = EgaDownloadClient(json_path, docker, log_dir, container_version=container_version)
+        self.gt_client = GnosDownloadClient(json_path, docker, log_dir, container_version=container_version)
+        self.pdc_client = PdcDownloadClient(json_path, docker, log_dir, container_version=container_version)
+        self.icgc_client = StorageClient(json_path, docker, log_dir=log_dir, container_version=container_version)
 
     def download_manifest(self, repos, file_ids, manifest, output, api_url, verify, unique=False):
         portal = portal_client.IcgcPortalClient(verify)

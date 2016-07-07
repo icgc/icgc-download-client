@@ -28,8 +28,8 @@ from icgcget.clients.errors import ApiError
 
 class StorageClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, verify=True, log_dir=None):
-        super(StorageClient, self).__init__(json_path, docker, log_dir)
+    def __init__(self, json_path=None, docker=False, verify=True, log_dir=None, container_version=''):
+        super(StorageClient, self).__init__(json_path, docker, log_dir, container_version=container_version)
         self.verify = verify
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
