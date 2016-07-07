@@ -21,7 +21,7 @@ import os
 import yaml
 import click
 from icgcget.commands.utils import config_parse
-from icgcget.clients.click_repo import ReposParamType, Logfile
+from icgcget.clients.params import ReposParamType, LogfileParam
 
 
 class ConfigureDispatcher(object):
@@ -47,7 +47,7 @@ class ConfigureDispatcher(object):
         output = self.prompt('output', 'output', message, input_type=click.Path(exists=True, writable=True,
                                                                                 file_okay=False, resolve_path=True))
         message = "Enter a location for the process logs to be stored.  Must be in an existing directory.  Optional."
-        logfile = self.prompt('logfile', 'logfile', message, input_type=Logfile())
+        logfile = self.prompt('logfile', 'logfile', message, input_type=LogfileParam())
         message = "Enter which repositories you want to download from.\n" + \
                   "Valid repositories are: aws-virginia cghub collaboratory ega gdc pdc"
         repos = self.prompt('repos', 'repos', message, input_type=ReposParamType())

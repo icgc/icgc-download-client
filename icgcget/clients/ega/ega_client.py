@@ -47,11 +47,13 @@ class EgaDownloadClient(DownloadClient):
         args = ['java', '-jar', tool_path, '-p', access, password, '-nt', parallel]
         if self.docker:
             args = self.prepend_docker_args(args, staging)
+        # Get a list of outstanding requests, to see if the current request has already been made
         request_list_args = args
         request_list_args.append('-lr')
         code = self._run_command(request_list_args, self.requests_parser)
         if code != 0:
             return code
+        # If the request hasn't already been made, make a download request
         if not self.skip:
             for object_id in object_ids:
                 request_call_args = args
@@ -63,6 +65,7 @@ class EgaDownloadClient(DownloadClient):
                 rc_request = self._run_command(request_call_args, self.download_parser)
                 if rc_request != 0:
                     return rc_request
+        # Now that request exists in some form, download the files
         download_call_args = args
         download_call_args.extend(['-dr', self.label, '-path', staging])
         if udt:
@@ -70,6 +73,7 @@ class EgaDownloadClient(DownloadClient):
         rc_download = self._run_command(download_call_args, self.download_parser)
         if rc_download != 0:
             return rc_download
+        # Decrypt downloaded files
         decrypt_call_args = args
         decrypt_call_args.append('-dc')
         for cip_file in os.listdir(staging):  # File names cannot be dynamically predicted from dataset names

@@ -20,6 +20,7 @@
 
 import re
 import os
+import shutil
 from icgcget.clients.errors import ApiError
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.portal_client import call_api
@@ -27,8 +28,8 @@ from icgcget.clients.portal_client import call_api
 
 class GdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, verify=True):
-        super(GdcDownloadClient, self).__init__(json_path, docker)
+    def __init__(self, json_path=None, docker=False, verify=True, log_dir=False):
+        super(GdcDownloadClient, self).__init__(json_path, docker, log_dir)
         self.repo = 'gdc'
         self.verify = verify
 
@@ -38,14 +39,18 @@ class GdcDownloadClient(DownloadClient):
         call_args.extend(uuids)
         access_file = self.get_access_file(access, staging)
         if self.docker:
-            access_path = '/icgc/mnt/' + os.path.split(access_file.name)[1]
-            call_args.extend(['--dir', '/icgc/mnt/', '-n', processes, '--token', access_path])
+            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
+            call_args.extend(['--dir', self.docker_mnt, '-n', processes, '--token', access_path, '--log-file',
+                              staging + '/gdc_log'])
             call_args = self.prepend_docker_args(call_args, staging)
         else:
-            call_args.extend(['--dir', staging, '-n', processes, '--token', access_file.name])
+            call_args.extend(['--dir', staging, '-n', processes, '--token', access_file.name, '--log-file',
+                              self.log_dir + '/gdc_log'])
         if udt:
             call_args.append('--udt')
         code = self._run_command(call_args, self.download_parser)
+        if self.docker:
+            shutil.move(staging + '/gdc_log', self.log_dir + '/gdc_log')
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):

@@ -26,8 +26,8 @@ from icgcget.clients.download_client import DownloadClient
 
 class PdcDownloadClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False):
-        super(PdcDownloadClient, self).__init__(json_path, docker)
+    def __init__(self, json_path=None, docker=False, log_dir=None):
+        super(PdcDownloadClient, self).__init__(json_path, docker, log_dir)
         self.repo = 'pdc'
         self.url = '--endpoint-url=https://bionimbus-objstore.opensciencedatacloud.org/'
 
@@ -37,9 +37,9 @@ class PdcDownloadClient(DownloadClient):
         env_dict = dict(os.environ)
 
         for data_path in data_paths:
-            call_args = [tool_path, 's3', self.url, 'cp', data_path]
+            call_args = [tool_path, '--debug' 's3', self.url, 'cp', data_path]
             if self.docker:
-                call_args.extend(['/icgc/mnt/'])
+                call_args.extend([self.docker_mnt + '/'])
                 envvars = {'AWS_ACCESS_KEY_ID': key, 'AWS_SECRET_ACCESS_KEY': secret_key}
                 call_args = self.prepend_docker_args(call_args, staging, envvars)
             else:
@@ -57,15 +57,15 @@ class PdcDownloadClient(DownloadClient):
         env_dict['AWS_ACCESS_KEY_ID'] = key
         env_dict['AWS_SECRET_ACCESS_KEY'] = secret_key
         for data_path in data_paths:
-            call_args = []
+
+            call_args = [path, 's3', self.url, 'cp', data_path]
             if self.docker:
-                call_args = ['docker', 'run', '-e', 'AWS_ACCESS_KEY_ID=' + key, '-e', 'AWS_SECRET_ACCESS_KEY=' +
-                             secret_key, '-t', '-v', output + ':/icgc/mnt', '--rm', 'icgc/icgc-get:0.3.1']
-            call_args.extend([path, 's3', self.url, 'cp', data_path])
-            if self.docker:
-                call_args.extend(['/icgc/mnt/', '--dryrun'])
+                call_args.append(self.docker_mnt + '/')
+                envvars = {'AWS_ACCESS_KEY_ID': key, 'AWS_SECRET_ACCESS_KEY': secret_key}
+                call_args = self.prepend_docker_args(call_args, output, envvars)
             else:
-                call_args.extend([output + '/', '--dryrun'])
+                call_args.append(output + '/')
+            call_args.append('--dryrun')
             result = self._run_test_command(call_args, "(403)", "(404)", env_dict, timeout=4)
             if result == 3:
                 return False

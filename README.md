@@ -23,14 +23,14 @@ python setup.py install
 
 Once the installation is complete, ICGC get can be invoked with the command `icgc-get`
 
-If you do not have any of download clients installed locally, ICGC get is capable of running them through docker. 
-Running any of the clients through a docker container will prevent issues from arising related to conflicting 
-software requirements for the data download clients.  To enable this functionality, first install 
-docker from https://docs.docker.com/mac/.
+If you do not have any of download clients installed locally, ICGC get is capable of running them through Docker. 
+Running any of the clients through a Docker container will prevent issues from arising related to conflicting 
+software requirements for the data download clients.  To enable this functionality, first [install 
+Docker.](https://www.docker.com/products/overview)
 
 ## Configuration
 ICGC get is packaged with a default configuration file `config.yaml`, that contains a list of all
-configurable options and the defaults for using these options in a docker container.
+configurable options and the defaults for using these options in a Docker container.
 In addition to editing the config file most configuration options can either be overwritten 
 through the command line or environmental variables. Environmental variables are in all caps, 
 have underscores as separators, and are prefixed by ICGCGET_. Command line options have dashes 

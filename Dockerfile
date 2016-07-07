@@ -11,6 +11,7 @@ MAINTAINER ICGC <dcc-support@icgc.org>
 ENV EGA_VERSION 2.2.2
 ENV GT_VERSION 3.8.7
 ENV GT_VERSION_LONG 207
+ENV GDC_VERSION gdc-client_v1.0.1_Ubuntu14.04_x64
 #
 # Update apt, add FUSE support, requiered libraries and basic command line tools
 #
@@ -38,12 +39,9 @@ RUN apt-get install -y \
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 #
-# Install ICGC-get and make root directory, install aws-cli, cleanup pip
-#
-
-#
 # Download and install latest EGA download client version
 #
+
 ENV PATH=$PATH:/icgc/genetorrent/bin
 RUN mkdir -p /icgc/ega-download-demo && \
     apt-get install -y unzip curl wget && \
@@ -70,19 +68,17 @@ RUN mkdir -p /icgc/ega-download-demo && \
     tar xvz --strip-components 1 && \
     mkdir -p /icgc/icgc-storage-client/logs && \
 
-
-
-
 #
 # Install latest version of gdc download tool
 #
 
     mkdir -p /icgc/gdc-data-transfer-tool && \
     cd /icgc/gdc-data-transfer-tool && \
-    wget -qO- https://gdc.nci.nih.gov/files/public/file/gdc-client_v1.0.1_Ubuntu14.04_x64_0.zip -O temp.zip ; \
+    wget -qO- https://gdc.nci.nih.gov/files/public/file/$GDC_VERSION.zip -O temp.zip ; \
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
     rm temp.zip && \
     cd /icgc
+    
 ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
 
 #
@@ -90,6 +86,10 @@ ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
 #
 
 COPY . /icgc/icgcget/
+
+#
+# Install ICGC-get and make root directory, install aws-cli, cleanup pip
+#
 
 RUN cd /icgc/icgcget && \
     wget -qO- https://github.com/pyinstaller/pyinstaller/zipball/develop -O temp.zip ; \

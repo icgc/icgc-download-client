@@ -25,7 +25,7 @@ import json
 import click
 
 from icgcget.clients.version import __version__
-from icgcget.clients.click_repo import RepoParamType, Logfile
+from icgcget.clients.params import RepoParamType, LogfileParam
 from icgcget.commands.versions import versions_command
 from icgcget.commands.reports import StatusScreenDispatcher
 from icgcget.commands.download import DownloadDispatcher
@@ -70,7 +70,7 @@ def logger_setup(logfile, verbose):
 @click.group()
 @click.option('--config', default=DEFAULT_CONFIG_FILE, envvar='ICGCGET_CONFIG')
 @click.option('--docker', '-d', type=click.BOOL, default=None, envvar='ICGCGET_DOCKER')
-@click.option('--logfile', default=None, type=Logfile(), envvar='ICGCGET_LOGFILE')
+@click.option('--logfile', default=None, type=LogfileParam(), envvar='ICGCGET_LOGFILE')
 @click.option('--verbose', '-v', is_flag=True, default=False, help="Do not verify ssl certificates")
 @click.pass_context
 def cli(ctx, config, docker, logfile, verbose):
@@ -138,10 +138,10 @@ def download(ctx, ids, repos, manifest, output,
     if not os.path.exists(staging):
         os.umask(0000)
         os.mkdir(staging, 0777)
-    json_path = output + '/.staging/state.json'
+    json_path = staging + '/state.json'
 
     old_download_session = load_json(json_path)
-    dispatch = DownloadDispatcher(json_path, ctx.obj)
+    dispatch = DownloadDispatcher(json_path, ctx.obj, ctx.default_map['logfile'])
     if old_download_session and ids == old_download_session['command']:
         download_session = old_download_session
     else:

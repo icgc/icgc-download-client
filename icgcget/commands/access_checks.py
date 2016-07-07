@@ -52,15 +52,15 @@ class AccessCheckDispatcher(object):
                 self.access_response(icgc_client.access_check(icgc_token, repo="collab", api_url=api_url),
                                      "Collaboratory.")
             except ApiError:
-                self.logger.error("Unable to connect to the ICGC api, cannot determine status of collaboratry access")
+                self.logger.error("Unable to connect to the ICGC API, cannot determine status of Collaboratory access")
 
         if "aws-virginia" in repo_list:
             check_access(self, icgc_token, "icgc")
             try:
                 self.access_response(icgc_client.access_check(icgc_token, repo="aws", api_url=api_url),
-                                     "Amazon Web Server.")
+                                     "ICGC Storage Server.")
             except ApiError:
-                self.logger.error("Unable to connect to the ICGC api, cannot determine status of AWS access")
+                self.logger.error("Unable to connect to the ICGC API, cannot determine status of storage server access")
 
         if 'ega' in repo_list:
             check_access(self, ega_username, 'ega', password=ega_password)

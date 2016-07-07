@@ -20,7 +20,7 @@
 
 import os
 import re
-
+import shutil
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.portal_client import call_api
 from icgcget.clients.errors import ApiError
@@ -28,8 +28,8 @@ from icgcget.clients.errors import ApiError
 
 class StorageClient(DownloadClient):
 
-    def __init__(self, json_path=None, docker=False, verify=True):
-        super(StorageClient, self).__init__(json_path, docker)
+    def __init__(self, json_path=None, docker=False, verify=True, log_dir=None):
+        super(StorageClient, self).__init__(json_path, docker, log_dir)
         self.verify = verify
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
@@ -45,14 +45,17 @@ class StorageClient(DownloadClient):
         elif repo == 'aws':
             self.repo = 'aws-virginia'
         if self.docker:
-            call_args.extend(['--output-dir', '/icgc/mnt'])
-            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_LEVEL_': 'DEBUG'}
+            call_args.extend(['--output-dir', self.docker_mnt])
+            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_FILE': staging + '/icgc_logs'}
             call_args = self.prepend_docker_args(call_args, staging, envvars)
         else:
             env_dict['ACCESSTOKEN'] = access
             env_dict['TRANSPORT_PARALLEL'] = processes
+            env_dict['LOGGING_FILE'] = self.log_dir + '/icgc_logs'
             call_args.extend(['--output-dir', staging])
         code = self._run_command(call_args, parser=self.download_parser, env=env_dict)
+        if self.docker:
+            shutil.move(staging + '/gdc_log', self.log_dir + '/gdc_log')
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
