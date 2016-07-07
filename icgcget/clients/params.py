@@ -20,14 +20,12 @@
 import click
 import os
 import tempfile
-REPOS = {
-         'collaboratory': {'code': 'collaboratory', 'name': 'collab'},
+REPOS = {'collaboratory': {'code': 'collaboratory', 'name': 'collab'},
          'aws-virginia': {'code': 'aws-virginia', 'name': 'aws'},
          'ega': {'code': 'ega', 'name': 'european genome association'},
          'gdc': {'code': 'gdc', 'name': 'genomic data commons'},
          'cghub': {'code': 'cghub', 'name': 'cancer genomic hub'},
-         'pdc': {'code': 'pdc', 'name': 'bionimbus protected data commons'}
-         }
+         'pdc': {'code': 'pdc', 'name': 'bionimbus protected data commons'}}
 
 
 class LogfileParam(click.ParamType):
@@ -42,7 +40,7 @@ class LogfileParam(click.ParamType):
                 logfile.close()
                 return value
             except IOError as ex:
-                if not ex.errno == 2:
+                if ex.errno != 2:
                     self.fail("Unable to write to logfile '{}'" % value)
         else:
             try:
@@ -63,7 +61,7 @@ class RepoParamType(click.ParamType):
             if value in REPOS.keys():
                 return value
             else:
-                self.fail("Invalid repo '{0}'.  Valid repos are: {1}".format(repo, ' '.join(REPOS)), param, ctx)
+                self.fail("Invalid repo '{0}'.  Valid repos are: {1}".format(value, ' '.join(REPOS)), param, ctx)
         except ValueError:
             self.fail('%s is not a valid repository' % value, param, ctx)
 

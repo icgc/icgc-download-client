@@ -78,7 +78,7 @@ RUN mkdir -p /icgc/ega-download-demo && \
     unzip temp.zip -d /icgc/gdc-data-transfer-tool ; \
     rm temp.zip && \
     cd /icgc
-    
+
 ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
 
 #

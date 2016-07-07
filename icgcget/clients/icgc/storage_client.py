@@ -38,7 +38,7 @@ class StorageClient(DownloadClient):
 
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
-        call_args = [tool_path, '--profile',  repo,  'download', '--object-id']
+        call_args = [tool_path, '--profile', repo, 'download', '--object-id']
         call_args.extend(uuids)
         if repo == 'collab':
             self.repo = 'collaboratory'

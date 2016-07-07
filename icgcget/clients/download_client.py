@@ -121,8 +121,7 @@ class DownloadClient(object):
                 return ex.returncode
             else:
                 return code
-        except OSError as ex:
-
+        except OSError:
             return 2
         except subprocess32.TimeoutExpired as ex:
             code = self.parse_test_ex(ex, forbidden, not_found)
