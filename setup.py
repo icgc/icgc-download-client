@@ -17,8 +17,8 @@
 #
 
 from setuptools import setup, find_packages
-from icgcget.clients.version import __version__
 
+from icgcget.version import __version__
 
 setup(name='icgcget',
       version=__version__,

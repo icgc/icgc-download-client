@@ -53,7 +53,7 @@ class LogfileParam(click.ParamType):
                 self.fail("Unable to resolve path to logfile '%s'" % value, param, ctx)
 
 
-class RepoParamType(click.ParamType):
+class RepoParam(click.ParamType):
     name = 'repo'
 
     def convert(self, value, param, ctx):
@@ -66,7 +66,7 @@ class RepoParamType(click.ParamType):
             self.fail('%s is not a valid repository' % value, param, ctx)
 
 
-class ReposParamType(click.ParamType):
+class ReposParam(click.ParamType):
     name = 'repos'
 
     def convert(self, value, param, ctx):

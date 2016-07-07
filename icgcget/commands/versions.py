@@ -17,14 +17,15 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-import os
 import logging
+import os
+
 from icgcget.clients.ega.ega_client import EgaDownloadClient
 from icgcget.clients.gdc.gdc_client import GdcDownloadClient
+from icgcget.clients.gnos.gnos_client import GnosDownloadClient
 from icgcget.clients.icgc.storage_client import StorageClient
 from icgcget.clients.pdc.pdc_client import PdcDownloadClient
-from icgcget.clients.gnos.gnos_client import GnosDownloadClient
-from icgcget.clients.version import __version__
+from icgcget.version import __version__
 
 
 def versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, docker):

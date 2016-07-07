@@ -18,23 +18,23 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import json
 import logging
 import os
 import sys
-import json
+
 import click
 
-from icgcget.clients.version import __version__
-from icgcget.clients.params import RepoParamType, LogfileParam
-from icgcget.commands.versions import versions_command
-from icgcget.commands.reports import StatusScreenDispatcher
-from icgcget.commands.download import DownloadDispatcher
 from icgcget.commands.access_checks import AccessCheckDispatcher
-from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, filter_repos
 from icgcget.commands.configure import ConfigureDispatcher
+from icgcget.commands.download import DownloadDispatcher
+from icgcget.commands.reports import StatusScreenDispatcher
+from icgcget.commands.utils import compare_ids, config_parse, validate_ids, load_json, filter_repos
+from icgcget.commands.versions import versions_command
+from icgcget.params import RepoParam, LogfileParam
+from icgcget.version import __version__
 
 DEFAULT_CONFIG_FILE = os.path.join(click.get_app_dir('icgc-get', force_posix=True), 'config.yaml')
-REPOS = ['aws-virginia', 'collaboratory', 'gdc', 'pdc', 'ega', 'cghub']
 API_URL = "https://staging.dcc.icgc.org/api/v1/"
 DOCKER_PATHS = {'icgc_path': '/icgc/icgc-storage-client/bin/icgc-storage-client',
                 'ega_path': '/icgc/ega-download-demo/EgaDemoClient.jar',
@@ -97,7 +97,7 @@ def cli(ctx, config, docker, logfile, verbose):
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=True)
-@click.option('--repos', '-r', multiple=True, type=RepoParamType())
+@click.option('--repos', '-r', multiple=True, type=RepoParam())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               required=True, envvar='ICGCGET_OUTPUT')
@@ -162,7 +162,7 @@ def download(ctx, ids, repos, manifest, output,
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=False)
-@click.option('--repos', '-r', multiple=True, type=RepoParamType())
+@click.option('--repos', '-r', multiple=True, type=RepoParam())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               envvar='ICGCGET_OUTPUT')
@@ -198,7 +198,7 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_ve
 
 @cli.command()
 @click.argument('IDS', nargs=-1, required=False)
-@click.option('--repos', '-r', multiple=True, type=RepoParamType())
+@click.option('--repos', '-r', multiple=True, type=RepoParam())
 @click.option('--manifest', '-m', is_flag=True, default=False)
 @click.option('--output', type=click.Path(exists=True, writable=True, file_okay=False, resolve_path=True),
               envvar='ICGCGET_OUTPUT')

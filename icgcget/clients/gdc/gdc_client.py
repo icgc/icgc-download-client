@@ -38,19 +38,21 @@ class GdcDownloadClient(DownloadClient):
         call_args = [tool_path, 'download']
         call_args.extend(uuids)
         access_file = self.get_access_file(access, staging)
+        log_name = '/gdc_log.log'
+        logfile = self.log_dir + log_name
         if self.docker:
             access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
             call_args.extend(['--dir', self.docker_mnt, '-n', processes, '--token', access_path, '--log-file',
-                              staging + '/gdc_log'])
+                              self.docker_mnt + log_name])
             call_args = self.prepend_docker_args(call_args, staging)
         else:
             call_args.extend(['--dir', staging, '-n', processes, '--token', access_file.name, '--log-file',
-                              self.log_dir + '/gdc_log'])
+                              logfile])
         if udt:
             call_args.append('--udt')
         code = self._run_command(call_args, self.download_parser)
         if self.docker:
-            shutil.move(staging + '/gdc_log', self.log_dir + '/gdc_log')
+            shutil.move(staging + log_name, logfile)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):

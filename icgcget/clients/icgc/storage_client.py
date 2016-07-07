@@ -46,16 +46,16 @@ class StorageClient(DownloadClient):
             self.repo = 'aws-virginia'
         if self.docker:
             call_args.extend(['--output-dir', self.docker_mnt])
-            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_FILE': staging + '/icgc_logs'}
+            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_FILE': staging + '/icgc_log.log'}
             call_args = self.prepend_docker_args(call_args, staging, envvars)
         else:
             env_dict['ACCESSTOKEN'] = access
             env_dict['TRANSPORT_PARALLEL'] = processes
-            env_dict['LOGGING_FILE'] = self.log_dir + '/icgc_logs'
+            env_dict['LOGGING_FILE'] = self.log_dir + '/icgc_log.log'
             call_args.extend(['--output-dir', staging])
         code = self._run_command(call_args, parser=self.download_parser, env=env_dict)
         if self.docker:
-            shutil.move(staging + '/gdc_log', self.log_dir + '/gdc_log')
+            shutil.move(staging + '/icgc_log.log', self.log_dir + '/icgc_log.log')
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):

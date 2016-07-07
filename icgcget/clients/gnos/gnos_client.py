@@ -30,39 +30,20 @@ class GnosDownloadClient(DownloadClient):
     def __init__(self, json_path=None, docker=False, log_dir=None):
         super(GnosDownloadClient, self).__init__(json_path, docker, log_dir)
         self.repo = 'cghub'
+        self.log_name = '/gnos_log.log'
 
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  password=None):
         access_file = self.get_access_file(access, staging)
-        call_args = []
-        if self.docker:
-            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
-            # Client needs to be run using sh to be able to download files in docker container.
-            call_args = ['/bin/sh', '-c', tool_path + '-vv' + '-d ' + ' '.join(uuids) + ' -c ' + access_path +
-                         ' -p ' + self.docker_mnt + ' -l ' + staging + '/gnos_logs']
-            call_args = self.prepend_docker_args(call_args, staging)
-        else:
-            call_args.extend([tool_path, '-vv', '-d'])
-            call_args.extend(uuids)
-            call_args.extend(['-c', access_file.name, '-p', staging, '-l', self.log_dir + '/gnos_logs'])
+        call_args = self.make_call_args(tool_path, staging, access_file, uuids)
         code = self._run_command(call_args, self.download_parser)
         if self.docker:
-            shutil.move(staging + '/gnos_log', self.log_dir + '/gnos_log')
+            shutil.move(staging + self.log_name, self.log_dir + self.log_name)
         return code
 
     def access_check(self, access, uuids=None, path=None, repo=None, output=None, api_url=None, password=None):
-
         access_file = self.get_access_file(access, output)
-        call_args = []
-        if self.docker:
-            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
-            call_args = ['/bin/sh', '-c', path + ' -vv ' + '-d ' + ' '.join(uuids) + ' -c ' + access_path +
-                         ' -p ' + self.docker_mnt + ' -l ' + output + '/gnos_logs']
-            call_args = self.prepend_docker_args(call_args)
-        else:
-            call_args.extend([path, '-vv', '-d'])
-            call_args.extend(uuids)
-            call_args.extend(['-c', access_file.name, '-p', output, '-l', self.log_dir + '/gnos_logs'])
+        call_args = self.make_call_args(path, output, access, uuids)
         result = self._run_test_command(call_args, "403 Forbidden", "404 Not Found")
         if self.docker:
             shutil.move(output + '/gnos_log', self.log_dir + '/gnos_log')
@@ -90,3 +71,18 @@ class GnosDownloadClient(DownloadClient):
         if filename:
             filename = filename[9:]
             self.session_update(filename, 'cghub')
+
+    def make_call_args(self, tool_path, staging, access_file, uuids):
+        log_name = '/gnos_log.log'
+        logfile = self.log_dir + log_name
+        if self.docker:
+            access_path = self.docker_mnt + '/.staging/' + os.path.split(access_file.name)[1]
+            # Client needs to be run using sh to be able to download files in docker container.
+            call_args = ['/bin/sh', '-c', tool_path + ' -vv' + ' -d ' + ' '.join(uuids) + ' -c ' + access_path +
+                         ' -p ' + self.docker_mnt + ' -l ' + self.docker_mnt + log_name]
+            call_args = self.prepend_docker_args(call_args, staging)
+        else:
+            call_args = [tool_path, '-vv', '-d']
+            call_args.extend(uuids)
+            call_args.extend(['-c', access_file.name, '-p', staging, '-l', logfile])
+        return call_args

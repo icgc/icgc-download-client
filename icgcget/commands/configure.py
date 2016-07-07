@@ -18,10 +18,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import os
-import yaml
+
 import click
+import yaml
+
 from icgcget.commands.utils import config_parse
-from icgcget.clients.params import ReposParamType, LogfileParam
+from icgcget.params import ReposParam, LogfileParam
 
 
 class ConfigureDispatcher(object):
@@ -50,7 +52,7 @@ class ConfigureDispatcher(object):
         logfile = self.prompt('logfile', 'logfile', message, input_type=LogfileParam())
         message = "Enter which repositories you want to download from.\n" + \
                   "Valid repositories are: aws-virginia cghub collaboratory ega gdc pdc"
-        repos = self.prompt('repos', 'repos', message, input_type=ReposParamType())
+        repos = self.prompt('repos', 'repos', message, input_type=ReposParam())
         message = "Enter true or false if you wish to use a docker container to download and run all download clients"
         docker = self.prompt('docker', 'docker', message, input_type=click.BOOL)
         conf_yaml = {'output': output, 'logfile': logfile, 'repos': repos, 'docker': docker}

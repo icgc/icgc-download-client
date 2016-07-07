@@ -145,7 +145,7 @@ class DownloadClient(object):
         for name, value in envvars.iteritems():
             docker_args.extend(['-e', name + '=' + value])
         if mnt:
-            docker_args.extend(['-v', mnt + ':/icgc/mnt'])
+            docker_args.extend(['-v', mnt + ':' + self.docker_mnt])
         docker_args.append(self.docker_version)
         return docker_args + args
 
