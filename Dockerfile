@@ -86,6 +86,7 @@ ENV PATH=$PATH:/icgc/gdc-data-transfer-tool
 #
 
 COPY . /icgc/icgcget/
+COPY ./logback.xml /icgc/icgc-storage-client/conf
 
 #
 # Install ICGC-get and make root directory, install aws-cli, cleanup pip

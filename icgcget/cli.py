@@ -78,7 +78,6 @@ def cli(ctx, config, docker, logfile, verbose):
         config_file = config_parse(config, DEFAULT_CONFIG_FILE, docker, DOCKER_PATHS)
         if config != DEFAULT_CONFIG_FILE and not config_file:
             raise click.Abort()
-        ctx.default_map = config_file
         if docker is not None:
             ctx.obj = docker
         elif 'docker' in config_file:
@@ -91,6 +90,7 @@ def cli(ctx, config, docker, logfile, verbose):
             logger = logger_setup(config_file['logfile'], verbose)
         else:
             logger = logger_setup(None, verbose)
+        ctx.default_map = config_file
         logger.debug(__version__ + ' ' + ctx.invoked_subcommand)
 
 
@@ -249,7 +249,6 @@ def version(ctx, cghub_path, ega_path, gdc_path, icgc_path, pdc_path):
     logger = logging.getLogger('__log__')
     logger.debug(str(ctx.params))
     versions_command(cghub_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj, __container_version__)
-    return 0
 
 
 def main():

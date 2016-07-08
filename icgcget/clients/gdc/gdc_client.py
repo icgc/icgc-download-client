@@ -41,7 +41,7 @@ class GdcDownloadClient(DownloadClient):
         log_name = '/gdc_log.log'
         logfile = self.log_dir + log_name
         if self.docker:
-            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
+            access_path = self.docker_mnt + '/' + os.path.basename(access_file.name)
             call_args.extend(['--dir', self.docker_mnt, '-n', processes, '--token', access_path, '--log-file',
                               self.docker_mnt + log_name])
             call_args = self.prepend_docker_args(call_args, staging)

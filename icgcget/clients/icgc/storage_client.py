@@ -21,6 +21,7 @@
 import os
 import re
 import shutil
+import fileinput
 from icgcget.clients.download_client import DownloadClient
 from icgcget.clients.portal_client import call_api
 from icgcget.clients.errors import ApiError
@@ -35,7 +36,7 @@ class StorageClient(DownloadClient):
     def download(self, uuids, access, tool_path, staging, processes, udt=None, file_from=None, repo=None,
                  password=None):
         env_dict = dict(os.environ)
-
+        log_file = self.log_dir + '/icgc_log.log'
         if file_from is not None:
             os.environ['TRANSPORT_FILEFROM'] = file_from
         call_args = [tool_path, '--profile', repo, 'download', '--object-id']
@@ -46,12 +47,14 @@ class StorageClient(DownloadClient):
             self.repo = 'aws-virginia'
         if self.docker:
             call_args.extend(['--output-dir', self.docker_mnt])
-            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes, 'LOGGING_FILE': staging + '/icgc_log.log'}
+            envvars = {'ACCESSTOKEN': access, 'TRANSPORT_PARALLEL': processes}
             call_args = self.prepend_docker_args(call_args, staging, envvars)
         else:
+            log_conf_path = os.path.abspath(os.path.join(os.path.dirname(tool_path), '../conf/logback.xml'))
+            self.edit_logback(log_conf_path, log_file)
             env_dict['ACCESSTOKEN'] = access
             env_dict['TRANSPORT_PARALLEL'] = processes
-            env_dict['LOGGING_FILE'] = self.log_dir + '/icgc_log.log'
+
             call_args.extend(['--output-dir', staging])
         code = self._run_command(call_args, parser=self.download_parser, env=env_dict)
         if self.docker:
@@ -88,3 +91,13 @@ class StorageClient(DownloadClient):
             filename = filename[0][1:-1]
             self.session_update(filename, self.repo)
         self.logger.info(response.strip())
+
+    @staticmethod
+    def edit_logback(logback, log_file):
+        # logback_file = open(logback)
+        for line in fileinput.input(logback, inplace=1):
+            match = re.search(r'name="LOG_FILE"', line)
+            if match:
+                print '     <property name="LOG_FILE" value="{}"/>'.format(log_file)
+            else:
+                print line.strip()

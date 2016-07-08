@@ -76,7 +76,7 @@ class GnosDownloadClient(DownloadClient):
         log_name = '/gnos_log.log'
         logfile = self.log_dir + log_name
         if self.docker:
-            access_path = self.docker_mnt + '/' + os.path.split(access_file.name)[1]
+            access_path = self.docker_mnt + '/' + os.path.basename(access_file.name)
             # Client needs to be run using sh to be able to download files in docker container.
             call_args = ['/bin/sh', '-c', tool_path + ' -vv' + ' -d ' + ' '.join(uuids) + ' -c ' + access_path +
                          ' -p ' + self.docker_mnt + ' -l ' + self.docker_mnt + log_name]
