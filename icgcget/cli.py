@@ -227,7 +227,7 @@ def cli(ctx, config, docker, logfile, verbose):
 @click.option('--icgc-path', envvar='ICGCGET_ICGC_PATH')
 @click.option('--icgc-transport-file-from', type=click.STRING, default='remote',
               envvar='ICGCGET_ICGC_TRANSPORT_FILE_FROM')
-@click.option('--icgc-transport-parallel', type=click.STRING, default='8', envvar='ICGCGET_PDC_TRANSPORT_PARALLEL')
+@click.option('--icgc-transport-parallel', type=click.STRING, default='8', envvar='ICGCGET_ICGC_TRANSPORT_PARALLEL')
 @click.option('--pdc-key', type=click.STRING, envvar='ICGCGET_PDC_KEY')
 @click.option('--pdc-secret', type=click.STRING, envvar='ICGCGET_PDC_SECRET')
 @click.option('--pdc-path', envvar='ICGCGET_PDC_PATH')
@@ -235,20 +235,15 @@ def cli(ctx, config, docker, logfile, verbose):
 @click.option('--override', '-o', is_flag=True, default=True, help='Bypass all confirmation prompts')
 @click.option('--no-ssl-verify', is_flag=True, default=True, help='Do not verify ssl certificates')
 @click.pass_context
-def download(ctx, ids, repos, manifest, output,
-             gnos_key_icgc, gnos_key_tcga, gnos_key_barcelona, gnos_key_heidelberg, gnos_key_london, gnos_key_cghub,
-             gnos_key_seoul, gnos_key_tokyo, gnos_path, gnos_transport_parallel,
-             ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
-             gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
-             icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
-             pdc_key, pdc_secret, pdc_path, pdc_transport_parallel, override, no_ssl_verify):
+def download(ctx, **kwargs):
     """
     Manages the download command, parses state.json and checks arguments for validity.
     """
     logger = logging.getLogger('__log__')
-    logger.debug(str(ctx.params))
-    staging = output + '/.staging'
-    filter_repos(repos)
+    logger.info(str(ctx.params))
+
+    staging = kwargs['output'] + '/.staging'
+    filter_repos(kwargs['repos'])
     tag = get_container_tag(ctx)
     oldmask = os.umask(0000)
     if not os.path.exists(staging):
@@ -260,24 +255,18 @@ def download(ctx, ids, repos, manifest, output,
 
     old_download_session = subprocess_cleanup(json_path)  # strips pids and cids that have been stopped
     dispatch = DownloadDispatcher(json_path, ctx.obj['docker'], ctx.obj['logdir'], tag)
-    if old_download_session and ids == old_download_session['command']:  # if old session was the same command, can skip
+    if old_download_session and kwargs['ids'] == old_download_session['command']:  # if old session was the same command, can skip
         download_session = old_download_session
     else:
-        validate_ids(ids, manifest)
-        download_session = dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify, unique=True)
+        validate_ids(kwargs['ids'], kwargs['manifest'])
+        download_session = dispatch.download_manifest(ctx, API_URL, unique=True)
         if old_download_session and 'file_data' in old_download_session.keys():  # Check and report don't have file data
             download_session['file_data'] = compare_ids(download_session['file_data'],
-                                                        old_download_session['file_data'], override)
+                                                        old_download_session['file_data'], kwargs['override'])
             download_session['subprocess'] = old_download_session['subprocess']
 
     json.dump(download_session, open(json_path, 'w', 0777))
-    dispatch.download(download_session, staging, output,
-                      gnos_key_icgc, gnos_key_tcga, gnos_key_barcelona, gnos_key_heidelberg, gnos_key_london,
-                      gnos_key_cghub, gnos_key_seoul, gnos_key_tokyo, gnos_path, gnos_transport_parallel,
-                      ega_username, ega_password, ega_path, ega_transport_parallel, ega_udt,
-                      gdc_token, gdc_path, gdc_transport_parallel, gdc_udt,
-                      icgc_token, icgc_path, icgc_transport_file_from, icgc_transport_parallel,
-                      pdc_key, pdc_secret, pdc_path, pdc_transport_parallel)
+    dispatch.download(download_session, staging, ctx)
     os.umask(oldmask)
     os.remove(json_path)
     logger.info("Download command completed successfully.")
