@@ -83,9 +83,10 @@ class DownloadDispatcher(object):
                 raise click.Abort()
 
             if copy['repoCode'] == repo:
-                if unique and search_recursive(copy["fileName"], output):
+                if unique and search_recursive(copy['fileName'], output):
                     file_data[repo].pop(entity['id'])
-                    self.logger.info('File %s found in download directory, skipping', entity['id'])
+                    self.logger.info('File %s found in download directory as {}, skipping'
+                                     .format(copy['fileName']), entity['id'])
                     continue
                 temp_file = {'fileName': copy["fileName"], 'dataType': entity['dataCategorization']['dataType'],
                              'donors': entity["donors"], 'fileFormat': copy['fileFormat']}
@@ -103,8 +104,8 @@ class DownloadDispatcher(object):
 
         self.size_check(size, output)
         if not flatten_file_data(file_data):
-            self.logger.error('All files were found in download directory, aborting')
-            raise click.Abort
+            self.logger.info('All files were found in download directory ({}), aborting'.format(output))
+
         return download_session
 
     def download(self, session, staging, ctx):

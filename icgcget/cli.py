@@ -240,7 +240,7 @@ def download(ctx, **kwargs):
     Manages the download command, parses state.json and checks arguments for validity.
     """
     logger = logging.getLogger('__log__')
-    logger.info(str(ctx.params))
+    logger.debug(str(ctx.params))
 
     staging = kwargs['output'] + '/.staging'
     filter_repos(kwargs['repos'])
