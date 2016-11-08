@@ -312,7 +312,7 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_ve
     if ids and not download_session:
         validate_ids(ids, manifest)
         download_dispatch = DownloadDispatcher(json_path, container_version=tag)
-        download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
+        download_session = download_dispatch.download_manifest(ctx,  API_URL)
     dispatch = StatusScreenDispatcher()
     if not download_session:
         raise click.BadArgumentUsage('No ids provided and no session info found, aborting')
@@ -346,15 +346,17 @@ def report(ctx, repos, ids, manifest, output, table_format, data_type, no_ssl_ve
 @click.option('--pdc-path', envvar='ICGCGET_PDC_ACCESS')
 @click.option('--no-ssl-verify', is_flag=True, default=True, help='Do not verify ssl certificates')
 @click.pass_context
-def check(ctx, repos, ids, manifest, output, gnos_key_icgc, gnos_key_tcga, gnos_key_barcelona, gnos_key_heidelberg,
-          gnos_key_london, gnos_key_cghub, gnos_key_seoul, gnos_key_tokyo, gnos_path, ega_username, ega_password,
-          gdc_token, icgc_token, pdc_key, pdc_secret, pdc_path, no_ssl_verify):
+def check(ctx, **kwargs):
     """
     Dispatcher for the check command.  Verifies input arguments, hits api if necessary, and dispatches access check
     command.
     """
     logger = logging.getLogger('__log__')
     logger.debug(str(ctx.params))
+
+    ids = kwargs['ids']
+    repos = kwargs['repos']
+
     json_path = None
     if ctx.obj['logdir']:
         json_path = ctx.obj['logdir'] + '/state.json'
@@ -364,11 +366,8 @@ def check(ctx, repos, ids, manifest, output, gnos_key_icgc, gnos_key_tcga, gnos_
     download_dispatch = DownloadDispatcher(json_path, ctx.obj['docker'], ctx.obj['logdir'], tag)
     download_session = {'file_data': {}}
     if ids:
-        download_session = download_dispatch.download_manifest(repos, ids, manifest, output, API_URL, no_ssl_verify)
-    dispatch.access_checks(repos, download_session['file_data'], gnos_key_icgc, gnos_key_tcga, gnos_key_barcelona,
-                           gnos_key_heidelberg, gnos_key_london, gnos_key_cghub, gnos_key_seoul, gnos_key_tokyo,
-                           gnos_path, ega_username, ega_password, gdc_token, icgc_token, pdc_key, pdc_secret, pdc_path,
-                           output, ctx.obj['docker'], API_URL, no_ssl_verify, tag)
+        download_session = download_dispatch.download_manifest(ctx, API_URL)
+    dispatch.access_checks(ctx, download_session['file_data'], ctx.obj['docker'], API_URL, tag)
     if os.path.isfile(json_path):
         os.remove(json_path)
 
