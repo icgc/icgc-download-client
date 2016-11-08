@@ -390,7 +390,6 @@ def configure(config):
         dispatch.handle_error(config)
 
 
-
 @cli.command()
 @click.option('--gnos-path', envvar='ICGCGET_GNOS_PATH')
 @click.option('--ega-path', envvar='ICGCGET_EGA_PATH')
@@ -405,7 +404,7 @@ def version(ctx, gnos_path, ega_path, gdc_path, icgc_path, pdc_path):
     logger = logging.getLogger('__log__')
     logger.debug(str(ctx.params))
     tag = get_container_tag(ctx)
-    versions_command(gnos_path, ega_path, gdc_path, icgc_path, pdc_path, ctx.obj['docker'], ctx.obj['logdir'], tag)
+    versions_command(ctx, gnos_path, ega_path, gdc_path, icgc_path, pdc_path, tag)
 
 
 def main():
