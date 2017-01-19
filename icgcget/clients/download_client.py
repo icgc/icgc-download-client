@@ -98,8 +98,8 @@ class DownloadClient(object):
         """
         call_args = [path, '--version']
         if self.docker:
-
             call_args = self.prepend_docker_args(call_args)
+
         self._run_command(call_args, self.version_parser)
 
     @abc.abstractmethod
@@ -161,6 +161,7 @@ class DownloadClient(object):
         return_code = process.poll()
         if return_code == 0:
             self.session_update('', self.repo)  # clear any running files if exit cleanly
+
         if self.cidfile and os.path.isfile(self.cidfile):
             os.remove(self.cidfile)
         return return_code
@@ -228,10 +229,13 @@ class DownloadClient(object):
         envvars = envvars or {}
         for name, value in envvars.iteritems():
             docker_args.extend(['-e', name + '=' + value])
+
         if self.cidfile:
             docker_args.append('--cidfile={}'.format(self.cidfile))
+
         if mnt:
-            docker_args.extend(['-u={}'.format(uid), '-v', mnt + ':' + self.docker_mnt])
+            docker_args.extend(['-v', mnt + ':' + self.docker_mnt])
+
         docker_args.append(self.docker_version)
         return docker_args + args
 
