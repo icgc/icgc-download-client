@@ -45,6 +45,7 @@ class DownloadClient(object):
         self.path = json_path
         self.docker = docker
         self.repo = ''
+        self.docker_uid = True
         self.docker_mnt = '/icgc/mnt'
         self.docker_version = 'icgc/icgc-get:' + container_version
         self.log_dir = log_dir
@@ -135,7 +136,7 @@ class DownloadClient(object):
             return 1
         if not env:
             env = dict(os.environ)
-        env['PATH'] = '/usr/local/bin:' + env['PATH']  # virtalenv compatibility.  Not strictly necessary
+        env['PATH'] = '/usr/local/bin:' + env['PATH']  # virtualenv compatibility.  Not strictly necessary
 
         try:
             output = ''
@@ -234,7 +235,10 @@ class DownloadClient(object):
             docker_args.append('--cidfile={}'.format(self.cidfile))
 
         if mnt:
-            docker_args.extend(['-v', mnt + ':' + self.docker_mnt])
+            if self.docker_uid:
+                docker_args.extend(['-u={}'.format(uid), '-v', mnt + ':' + self.docker_mnt])
+            else:
+                docker_args.extend(['-v', mnt + ':' + self.docker_mnt])
 
         docker_args.append(self.docker_version)
         return docker_args + args
